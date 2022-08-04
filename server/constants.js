@@ -3,8 +3,10 @@ const FPS = 60;
 const shipProperties = {
     ship1 : {
         playerName: '',
+        playerId: '',
         life : {
-            healh: 100,
+            health: 0,
+            maxHealth: 200,
             indicator: 1,
         },
         pos: {
@@ -14,6 +16,11 @@ const shipProperties = {
         bullet: {
             damage: 60,
             speed: 6,
+            maxSpeed: 6,
+            spread: 0,
+            distance: 0,
+            maxDistance: 100,
+            opacity:1,
             size: {
                 x: 30,
                 y: 30,
@@ -38,9 +45,11 @@ const shipProperties = {
 
     ship2 : {
         playerName: '',
+        playerId: '',
         colliding : false,
         life : {
-            healh: 75,
+            health: 0,
+            maxHealth: 75,
             indicator: 1,
         },
         pos: {
@@ -50,6 +59,11 @@ const shipProperties = {
         bullet: {
             damage: 15,
             speed: 7,
+            maxSpeed: 7,
+            spread: 10,
+            distance: 0,
+            maxDistance: 50,
+            opacity:1,
             size: {
                 x: 9,
                 y: 9,
@@ -74,9 +88,11 @@ const shipProperties = {
 
     ship3 : {
         playerName: '',
+        playerId: '',
         colliding : false,
         life : {
-            healh: 60,
+            health: 0,
+            maxHealth: 60,
             indicator: 1,
         },
         pos: {
@@ -86,6 +102,11 @@ const shipProperties = {
         bullet: {
             damage: 32,
             speed: 13,
+            maxSpeed: 13,
+            spread: 2,
+            distance: 0,
+            maxDistance: 200,
+            opacity:1,
             size: {
                 x: 13,
                 y: 10,

@@ -1,15 +1,18 @@
 const io = require('socket.io')();
-const { initGame, spawnPlayer, gameLoop, keyDown, keyUp } = require('./game');
+const { initGame, spawnPlayer, checkPlayerAlive, gameLoop, keyDown, keyUp } = require('./game');
 const { makeid } = require('./utils');
 const { FPS } = require('./constants');
+const { ENG, PTBR } = require('./forbidden');
 
 const state = {};
 const clientRooms = {};
+const MAXPLAYERPERROOM = 5;
+const MAXROOMS = 10;
 
 io.on('connection', client => {
     
 
-    
+    client.on('disconnect', handleDisconect);
     client.on('newGame', handleNewGame);
     client.on('keyDown', handleKeyDown);
     client.on('keyUp', handleKeyUp);
@@ -37,8 +40,17 @@ io.on('connection', client => {
 
     }
 
-    function handleNewGame(selected) {
+    function handleNewGame(args) {
+        console.log('-----------------------------------------------------');
+        console.log(' > [handleNewGame] Validando Nickname do Jogador');
+        if (ENG.find(element => {return element.toLowerCase() === args.playerName.toLowerCase()}) || PTBR.find(element => {return element.toLowerCase() === args.playerName.toLowerCase()})){
+            console.log(' > [handleNewGame] Nickname Proibido, barrando conexão...');
+            client.emit('forbiddenName');
+            return;
+        }
+
         console.log(' > [handleNewGame] Tentando conectar jogador');
+
         
         //Search for a room with available slots
         console.log(' > [handleNewGame] Procurando por salas existentes com jogadores');
@@ -52,18 +64,19 @@ io.on('connection', client => {
             room = clientRooms[key];
 
 
-            if (room.players.length < 10) {
+            if (room.players.length < MAXPLAYERPERROOM) {
                 if (room.players.length === 0) {
-                    //Delete room
-                    clientRooms.splice(clientRooms.indexOf(room), 1);
+                    delete state[room.roomName];
+                    delete clientRooms[key];
                 }
                 else
                 {
                     console.log(' > [handleNewGame] Encontrada sala com espaço para jogadores, conectando...');
-                    state[room.roomName].players[client.id] = (spawnPlayer({'shipStyle' : selected, 'id' : client.id}));
+                    state[room.roomName].players[client.id] = (spawnPlayer({'shipStyle' : args.selected, 'id' : client.id, 'playerName': args.playerName}));
                     room.players.push(client.id);
+                    client.emit('init', { roomId: room.roomName, playerId: client.id  });
                     client.join(room.roomName);
-                    client.emit('init', room.roomName);
+                    console.log(` > [handleNewGame] Jogador: Id:${client.id} Nome: ${args.playerName} conectado a sala existente: ${room.roomName}`);
                     checkRoom = true;
                     return;
                 }
@@ -82,29 +95,64 @@ io.on('connection', client => {
             
             client.emit('gameCode', roomName);
 
-            state[roomName] = initGame({'shipStyle' : selected, 'id' : client.id});
+            state[roomName] = initGame({'shipStyle' : args.selected, 'id' : client.id, 'playerName': args.playerName});
 
             client.join(roomName);
             client.number = 1;
-            client.emit('init', roomName);
-            // console.log(clientRooms);
-            // console.log(io.sockets.in(roomName).rooms);
+            client.emit('init', { roomId: roomName, playerId: client.id  });
+            
+            console.log(` > [handleNewGame] Iniciando o jogo na sala ${roomName} com o player Id: ${client.id} Nome: ${args.playerName}`);
             startGameInterval(roomName);
         }
+    }
 
-        
+    function handleDisconect() {
+        console.log(` > [handleDisconect]<Server> Cliente desconectado ${client.id}.`);
+        if (client.id){
+            
+            Object.keys(clientRooms).forEach(key => {
+            const room = clientRooms[key];
+            if (room.players.includes(client.id)){
+                console.log(` > [handleDisconect]<Server> Removendo o cliente: ${client.id} da sala: ${room.roomName}`);
+                room.players.splice(room.players.indexOf(client.id), 1);
+                delete state[room.roomName].players[client.id];
+                if (room.players.length === 0) {
+                    //Delete room
+                    console.log(` > [handleDisconect]<Server> Sala vazia, Removendo sala: ${room.roomName}`);
+                    delete state[room.roomName];
+                    delete clientRooms[key];
+                }
+
+            }});
+        } else {
+            return;
+        }
+
     }
 
     
 });
 
+
+
 function startGameInterval(roomName) {
     const intervalId = setInterval(() => {
         // console.log(' > [startGameInterval] Atualizando estado do jogo');
         gameState = state[roomName];
+
+        deathPlayer = checkPlayerAlive(gameState);
+        // console.log(` > [startGameInterval] Jogador morto: ${deathPlayer}`);
+        if(deathPlayer){
+            console.log(' > [startGameInterval]<Server> Jogador morreu:', deathPlayer.playerName);
+            io.sockets.in(roomName).emit('gameOver', JSON.stringify( {id : deathPlayer.playerId}));
+            delete gameState.players[deathPlayer.playerId];
+            
+        }
+
         gameLoop(gameState);
         emitGameState(roomName, gameState);
-        // console.log(gameState.players);
+        
+
 
     }, 1000 / FPS);
 }

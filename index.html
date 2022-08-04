@@ -11,6 +11,7 @@
             display: none;
         }
 
+
         [type=radio] {
             position: absolute;
             opacity: 0;
@@ -43,7 +44,15 @@
                 <div class="h-100">
                     <div class="row h-100 justify-content-center align-items-center">
                         <div class="col-md-6">
-                            <h1 class="text-center">Select your character</h1>
+                            <h1 class="text-center"> This is the tale of: </h1>
+                            <br/>
+                            <br/>
+                            <br/>
+                            <div class="form-group">
+                                <input type="text" placeholder="Nickname" class="form-control" id="nickname" required>
+                            </div>
+                            <br/>
+                            <!-- <h1 class="text-center">Select your character</h1> -->
                             <div class="text-center">
                                 
                                 <form>
@@ -88,8 +97,17 @@
         <section id="gameScreen" class="vh-100">
             <div class="container h-100">
                 <div class="h-100">
-                    <div class="d-flex flex-column align-items-center justify-content-center h-100">
-                        <canvas id="canvas"></canvas>
+                    <div id="canvas-stack" class="d-flex flex-column align-items-center justify-content-center h-100">
+                        
+                        <form>
+                            <!-- <label>
+                                <progress id="health" value="50" max="100"></progress>
+                            </label> -->
+                            <label>
+                                <canvas id="canvas"></canvas>
+                            </label>
+                        </form>
+                        
                     </div>
                 </div>
             </div>

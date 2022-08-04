@@ -6,6 +6,9 @@ const CANVASSIZE = {x: 1500, y: 900};
 
 
 Math.fmod = function (a,b) { return Number((a - (Math.floor(a / b) * b)).toPrecision(8)); };
+Math.lerp = function (X1, X2, Y1, Y2, X3) { return Number((X2 - X3) * Y1 + (X3 - X1) * Y2) / (X2 - X1);};
+
+Math.percentage = function (percentage, totalValue){ return Number((percentage/100) * totalValue) };
 
 function initGame(args){
     const state = createGameState(args);
@@ -33,16 +36,18 @@ function spawnPlayer(args){
     player = returnShip(args.shipStyle);
     
     player.stateMachine = createStateMachine(player);
-    player.playerName = args.id;
+    player.playerId = args.id;
+    player.playerName = args.playerName;
 
     // Random Position
     player.pos = {
-        x: Math.floor(Math.random() * CANVASSIZE.x - player.size.x),
-        y: Math.floor(Math.random() * CANVASSIZE.y - player.size.y),
+        x: Math.floor(Math.random() * ((CANVASSIZE.x - player.size.x) - player.size.x) + player.size.x),
+        y: Math.floor(Math.random() * ((CANVASSIZE.y - player.size.y) - player.size.y) + player.size.y),
     }
 
     // Random Angle
     player.angle = Math.floor(Math.random() * 360);
+    player.life.health = player.life.maxHealth;
 
     return player;
 }
@@ -58,7 +63,6 @@ function gameLoop(state){
     updateBulletsPosition(state);
     checkBulletsCollision(state);
     updatePlayerBullet(state);
-
     //Update player position
 
 }
@@ -71,6 +75,9 @@ function keyDown(state, id, { key, keyCode }){
     }
     // console.log(' > [keyDown] Tecla pressionada: ', key, ' - Player ID: ', id);
     const player = state.players[id];
+    if (!player){
+        return
+    }
     const stateMachine = player.stateMachine.movement;
     const acceptedMoves = {
 
@@ -115,11 +122,13 @@ function keyUp(state, id, { key, keyCode }){
         return
     }
     const player = state.players[id];
+    if (!player){
+        return
+    }
     const stateMachine = player.stateMachine.movement;
     const acceptedMoves = {
         ArrowUp() {
             stateMachine.dispatchEvent(stateMachine.foward, 'OFF');
-            
         },
 
         ArrowDown() {
@@ -163,8 +172,12 @@ function spawnBullet(state, player){
                 x: (player.pos.x + player.size.x / 2) - player.bullet.size.x/2,
                 y: (player.pos.y + player.size.y / 2) - player.bullet.size.y/2,
             },
-        angle: player.angle,
+        angle: player.angle + (Math.random() * (player.bullet.spread - (-player.bullet.spread)) + (-player.bullet.spread)),
         speed: player.bullet.speed,
+        distance: player.bullet.distance,
+        maxDistance: player.bullet.maxDistance,
+        maxSpeed: player.bullet.maxSpeed,
+        opacity: player.bullet.opacity,
         size: player.bullet.size,
         damage: player.bullet.damage,
         fireRate: player.bullet.fireRate,
@@ -253,8 +266,21 @@ function updateBulletsPosition(state){
 
         // Move bullet if is on Screen Boundaries
         if (checkBoundaries(bullet.size, bullet.pos)){
-            bullet.pos.x += bullet.speed * Math.cos(bullet.angle * Math.PI / 180);
-            bullet.pos.y += bullet.speed * Math.sin(bullet.angle * Math.PI / 180);
+            bullet.distance += 1;
+
+            if (bullet.speed > 0){
+                n = bullet.maxDistance - Math.percentage(15, bullet.maxDistance)
+                if (bullet.distance >= n){
+
+                    bullet.speed = Math.lerp(n, bullet.maxDistance, bullet.maxSpeed, 0, bullet.distance);
+                    bullet.opacity = Math.lerp(0, bullet.maxDistance, 1, 0, bullet.distance);
+                    if (bullet.opacity < 0)  bullet.opacity = 0;
+                }
+                bullet.pos.x += bullet.speed * Math.cos(bullet.angle * Math.PI / 180);
+                bullet.pos.y += bullet.speed * Math.sin(bullet.angle * Math.PI / 180);
+            } else {
+                state.bullets.splice(state.bullets.indexOf(bullet), 1);
+            }
         }else {
             // Destroy bullet
             state.bullets.splice(state.bullets.indexOf(bullet), 1);
@@ -290,6 +316,7 @@ function checkBulletsCollision(state){
             player = state.players[key];
             if (player !== bullet.origin){
                 if (checkCollision(bullet, player)){
+                    damagePlayer(player, bullet.damage);
                     state.bullets.splice(state.bullets.indexOf(bullet), 1);
                 }
             }
@@ -306,9 +333,32 @@ function checkBoundaries(objSize, nextPos){
         return true;
     }
 
+}
+
+function damagePlayer(player, damage){
+    player.life.health -= damage;
+    player.life.indicator = Math.lerp(0, player.life.maxHealth, 0, 1, player.life.health);
+    if (player.life.indicator < 0) player.life.indicator = 0;
 
 }
 
+function checkPlayerAlive(state){
+    if (!state){
+        return
+    }
+
+    let deathPlayer;
+    Object.keys(state.players).forEach(key => {
+        player = state.players[key];
+        if (player.life.health <= 0){
+            // console.log(' > [checkPlayerAlive]<Game> Player ', player.playerName, ' is dead');
+            deathPlayer = player;
+            return;
+        }
+    });
+
+    return deathPlayer ? deathPlayer : null;
+}
 
 
 
@@ -316,6 +366,7 @@ function checkBoundaries(objSize, nextPos){
 module.exports = {
     initGame,
     spawnPlayer,
+    checkPlayerAlive,
     gameLoop,
     keyDown,
     keyUp,
