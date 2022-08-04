@@ -65,19 +65,14 @@ function gameLoop(state){
 
 
 function keyDown(state, id, { key, keyCode }){
+    // console.log(' > [keyDown] Tecla pressionada');
     if (!state || !key){
         return
     }
-
+    // console.log(' > [keyDown] Tecla pressionada: ', key, ' - Player ID: ', id);
     const player = state.players[id];
     const stateMachine = player.stateMachine.movement;
     const acceptedMoves = {
-        a() {
-            player.life.indicator -= 0.1;
-        },
-        s(){
-            player.life.indicator += 0.1;
-        },
 
         ArrowUp() {
             stateMachine.dispatchEvent(stateMachine.foward, 'ON');
@@ -313,6 +308,8 @@ function checkBoundaries(objSize, nextPos){
 
 
 }
+
+
 
 
 

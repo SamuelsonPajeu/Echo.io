@@ -21,33 +21,20 @@ io.on('connection', client => {
             const room = clientRooms[key];
             if (room.players.includes(client.id)){
                 // console.log(` > [getRoomNameByClientId]<Server> Encontrou a sala ${room.roomName} para o cliente ${client.id}`);
-                
-                roomName = room.roomName;
-            } else {
-                roomName = null;
-            }
-        });
+                keyDown(state[room.roomName], client.id, command);
+
+            }});
         
-        // console.log(`> [handleKeyDown] Nome da Sala: ${roomName}`);
-        if (roomName){
-            keyDown(state[roomName], client.id, command);
-        }
+
     }
 
     function handleKeyUp(command) {
         Object.keys(clientRooms).forEach(key => {
             const room = clientRooms[key];
             if (room.players.includes(client.id)){
-                
-                roomName = room.roomName;
-            } else {
-                roomName = null;
-            }
-        });
-        
-        if (roomName){
-            keyUp(state[roomName], client.id, command);
-        }
+                keyUp(state[room.roomName], client.id, command);
+        }});
+
     }
 
     function handleNewGame(selected) {
@@ -65,7 +52,7 @@ io.on('connection', client => {
             room = clientRooms[key];
 
 
-            if (room.players.length < 5) {
+            if (room.players.length < 10) {
                 if (room.players.length === 0) {
                     //Delete room
                     clientRooms.splice(clientRooms.indexOf(room), 1);

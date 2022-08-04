@@ -55,7 +55,7 @@ const shipProperties = {
                 y: 9,
             },
             angle: 0,
-            fireRate: 0.4,
+            fireRate: 0.5,
             lastFire: 0,
             pos : {
                 x : 0,
