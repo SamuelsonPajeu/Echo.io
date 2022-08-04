@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>Echo</title>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
+    </head>
+    <style>
+    
+        #gameScreen {
+            display: none;
+        }
+
+        [type=radio] {
+            position: absolute;
+            opacity: 0;
+        }
+
+        [type=radio]+img {
+            cursor: pointer;
+            margin-right: 0.5rem;
+        }
+
+        [type=radio]:checked + img {
+            outline: 2px solid white;
+        }
+
+
+        body {
+            background: #20262E;
+            min-height: 100px;
+            color: white;
+            font-family: 'Arial';
+        }
+
+
+        
+    </style>
+    <body>
+        <!-- SELECT CHARACTER SCREEN -->
+        <section id="initialScreen" class="vh-100">
+            <div class="container h-100">
+                <div class="h-100">
+                    <div class="row h-100 justify-content-center align-items-center">
+                        <div class="col-md-6">
+                            <h1 class="text-center">Select your character</h1>
+                            <div class="text-center">
+                                
+                                <form>
+                                    <label>
+                                        
+                                        <input id="ship1" type="radio" name="ship-selector" value="ship1" checked/>
+                                        <img src="assets/img/ship1.png">
+                                        <span class="checkmark"></span>
+                                    </label>
+
+                                    <label>
+                                        
+                                        <input id="ship2" type="radio" name="ship-selector" value="ship2" />
+                                        <img src="assets/img/ship2.png">
+                                        <span class="checkmark"></span>
+                                    </label>
+
+                                    <label>
+                                        
+                                        <input id="ship3" type="radio" name="ship-selector" value="ship3" />
+                                        <img src="assets/img/ship3.png">
+                                        <span class="checkmark"></span>
+                                    </label>
+                                </form>
+                            </div>
+
+                            <div class="text-center">
+                                <br/>
+                                <button id="startGameButton" class="btn btn-primary" id="startGame">Start Game</button>
+                            </div>
+                            
+                        </div>
+                        
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+
+        <!-- GAME -->
+        <section id="gameScreen" class="vh-100">
+            <div class="container h-100">
+                <div class="h-100">
+                    <div class="d-flex flex-column align-items-center justify-content-center h-100">
+                        <canvas id="canvas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <script src="https://cdn.socket.io/4.5.1/socket.io.min.js"></script>
+        <script src="index.js"></script>
+
+    </body>
+</html>
