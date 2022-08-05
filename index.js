@@ -5,6 +5,8 @@ socket.on('init', handleInit);
 socket.on('gameState', handleGameState);
 socket.on('gameOver', handleGameOver);
 socket.on('forbiddenName', handleForbiddenName);
+socket.on('roomDoesNotExist', handleRoomDoesNotExist);
+socket.on('roomFull', handleRoomFull);
 
 
 
@@ -17,13 +19,29 @@ const LIFEBARCORNERRADIUS = 30;
 
 
 const nickname = document.getElementById('nickname');
+const roomIdInput = document.getElementById('roomId');
 const gameScreen = document.getElementById('gameScreen');
 const initialScreen = document.getElementById('initialScreen');
 const startGameButton = document.getElementById('startGameButton');
+const joinGameButton = document.getElementById('joinGameButton');
+const respawnButtom = document.getElementById('respawnBt');
+
+
+const gameCodeDisplay = document.getElementById('gameCodeDisplay');
+
+const joinGameObjs = document.getElementsByClassName('joinGame');
+const startGameObjs = document.getElementsByClassName('startGame');
+const respawnObjs = document.getElementsByClassName('respawn');
+const xpBar = document.getElementById('xpBar');
+
 
 startGameButton.addEventListener('click', newGame);
+joinGameButton.addEventListener('click', joinGame);
+respawnButtom.addEventListener('click', respawn);
 
 let canvas, ctx, hudCanvas, hudCtx;
+
+
 let playerId;
 let roomId;
 let playerName;
@@ -36,14 +54,40 @@ function newGame() {
     if (playerName.length > 0 && playerName.length < 16) {
         selected =  document.querySelector('input[name="ship-selector"]:checked').value;
 
-        socket.emit('newGame', {selected : selected, playerName : playerName});
+        socket.emit('newGame', {
+            selected : selected, 
+            playerName : playerName
+        });
         
     } else{
-        playerName.length == 0 ? alert('Preencha o campo de Nickname') : alert('O Nickname deve ter no máximo 16 caracteres');
+        playerName.length == 0 ? null : alert('O Nickname deve ter no máximo 16 caracteres');
     }
 
 }
 
+function joinGame() {
+    playerName = nickname.value;
+    joinRoomId = roomIdInput.value;
+
+
+    if (playerName.length > 0 && playerName.length < 16) {
+        if (joinRoomId.length > 0 && joinRoomId.length == 5){
+            selected =  document.querySelector('input[name="ship-selector"]:checked').value;
+        
+            socket.emit('joinGame', {
+                roomId : joinRoomId, 
+                selected: selected, 
+                playerName : playerName
+            });
+        } else {
+            joinRoomId.length == 0 ? null : alert('O Id da sala deve ter exatamente 5 caracteres');
+            return;
+        }
+        
+    } else{
+        playerName.length == 0 ? null : alert('O Nickname deve ter no máximo 16 caracteres');
+        return;
+    }}
 
 
 
@@ -79,6 +123,7 @@ function start() {
 
 }
 
+// DRAW 
 function drawScreen(state) {
     // GAME CANVAS
     ctx.fillStyle = BG_COLOUR;
@@ -125,10 +170,21 @@ function drawPlayer(players, color) {
     });
 }
 
+function drawXpBar(players){
+    Object.keys(players).forEach(player => {
+        playerState = players[player];
+
+        if (playerState.playerId === playerId) {
+            xpBar.value = playerState.level.exp.indicator;
+        }
+    });
+}
+
 
 function drawBullets(bullets, color) {
 
-    bullets.forEach(bullet => {
+    for (i in bullets){
+        bullet = bullets[i];
         ctx.fillStyle = color;
         ctx.save();
         ctx.translate(bullet.pos.x + bullet.size.x/2 , bullet.pos.y + bullet.size.y/2);
@@ -138,8 +194,7 @@ function drawBullets(bullets, color) {
         ctx.fillRect(bullet.pos.x, bullet.pos.y, bullet.size.x, bullet.size.y);
 
         ctx.restore();
-    }
-    );
+    };
 }
 
 function drawLifeBar(players){
@@ -173,6 +228,9 @@ function drawLifeBar(players){
     });
 }
 
+
+// TO SERVER
+
 function keyDown(command){
     // console.log(` > [keyDown]<Client> Tecla Pressionada: ${command.key} Código: ${command.keyCode}`);
     socket.emit('keyDown', {key : command.key, keyCode: command.keyCode});
@@ -188,11 +246,20 @@ function handleInit(args) {
     console.log(` > [handleInit] Entrou na sala: ${args.roomId} com o id: ${args.playerId}`);
     playerId = args.playerId;
     roomId = args.roomId;
+    gameCodeDisplay.innerText = `Room Id: ${roomId}`;
 
 }
 
 function handleForbiddenName(){
     alert('Nome inválido');
+}
+
+function handleRoomDoesNotExist(){
+    alert('Sala não existe');
+}
+
+function handleRoomFull(){
+    alert('Sala cheia');
 }
 
 function handleGameState(gameState) {
@@ -201,20 +268,65 @@ function handleGameState(gameState) {
     requestAnimationFrame(() => drawScreen(gameState)); 
     requestAnimationFrame(() => drawBullets(gameState.bullets, BULLET_COLOUR));
     requestAnimationFrame(() => drawPlayer(gameState.players, PLAYER_COLOUR));
+    requestAnimationFrame(() => drawXpBar(gameState.players));
+
+
     // requestAnimationFrame(() => drawLifeBar(gameState.players));
-
-
     // requestAnimationFrame(() => drawPlayersCollision(gameState.players));
     
+}
+
+function respawn(args){
+    // TODO - respawn player
+    for (var i = 0; i < respawnObjs.length; i++) {
+        respawnObjs[i].style.display = 'none';
+    }
+
+    selected =  document.querySelector('input[name="ship-selector-respawn"]:checked').value;
+
+    socket.emit('respawn', {
+        roomId : roomId, 
+        selected: selected, 
+        playerName : playerName
+    });
+
 }
 
 function handleGameOver(args) {
     args = JSON.parse(args);
 
-    console.log(args.id === playerId);
     if (args.id == playerId) {
         // TODO: GAME OVER
+        for (var i = 0; i < respawnObjs.length; i++) {
+            respawnObjs[i].style.display = 'block';
+        }
     }
 }
 
+function insertRoom(){
+    
+    roomIdInput.required = true;
+
+    for (var i = 0; i < startGameObjs.length; i++) {
+        startGameObjs[i].style.display = 'none';
+    }
+
+
+    for (var i = 0; i < joinGameObjs.length; i++) {
+        joinGameObjs[i].style.display = 'block';
+    }
+
+}
+
+function goBack() {
+    roomIdInput.required = false;
+        
+    for (var i = 0; i < startGameObjs.length; i++) {
+        startGameObjs[i].style.display = 'block';
+    }
+
+    for (var i = 0; i < joinGameObjs.length; i++) {
+        joinGameObjs[i].style.display = 'none';
+    }
+}
 

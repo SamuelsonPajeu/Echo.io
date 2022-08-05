@@ -6,7 +6,7 @@ const { ENG, PTBR } = require('./forbidden');
 
 const state = {};
 const clientRooms = {};
-const MAXPLAYERPERROOM = 5;
+const MAXPLAYERPERROOM = 2;
 const MAXROOMS = 10;
 
 io.on('connection', client => {
@@ -14,8 +14,10 @@ io.on('connection', client => {
 
     client.on('disconnect', handleDisconect);
     client.on('newGame', handleNewGame);
+    client.on('joinGame', handleJoinGame);
     client.on('keyDown', handleKeyDown);
     client.on('keyUp', handleKeyUp);
+    client.on('respawn', handleRespawn);
 
 
     function handleKeyDown(command) {
@@ -40,6 +42,46 @@ io.on('connection', client => {
 
     }
 
+    function handleJoinGame(args) {
+        console.log('-----------------------------------------------------');
+        console.log(' > [handleJoinGame] Validando Nickname do Jogador');
+        if (ENG.find(element => {return element.toLowerCase() === args.playerName.toLowerCase()}) || PTBR.find(element => {return element.toLowerCase() === args.playerName.toLowerCase()})){
+            console.log(' > [handleJoinGame] Nickname Proibido, barrando conexão...');
+            client.emit('forbiddenName');
+            return;
+        }
+
+        console.log(' > [handleJoinGame] Tentando conectar jogador');
+
+        if (!clientRooms[args.roomId]){
+            console.log(' > [handleJoinGame]<Server> Sala não existe...');
+            client.emit('roomDoesNotExist');
+            return;
+        } else {
+            if (clientRooms[args.roomId].players.length >= MAXPLAYERPERROOM){
+                console.log(' > [handleJoinGame]<Server> Sala cheia...');
+                client.emit('roomFull');
+                return;
+            } else {
+                console.log(' > [handleJoinGame] Sala disponível, conectando...');
+                room = clientRooms[args.roomId];
+                state[room.roomName].players[client.id] = (spawnPlayer({'shipStyle' : args.selected, 'id' : client.id, 'playerName': args.playerName}));
+                room.players.push(client.id);
+                client.emit('init', { roomId: room.roomName, playerId: client.id  });
+                client.join(room.roomName);
+                console.log(` > [handleJoinGame] Jogador: Id:${client.id} Nome: ${args.playerName} conectado a sala existente: ${room.roomName}`);
+                return;
+            }
+        }
+
+    }
+
+    function handleRespawn(args) {
+        console.log(' > [handleRespawn] Respawnando jogador');
+        room = clientRooms[args.roomId];
+        state[room.roomName].players[client.id] = (spawnPlayer({'shipStyle' : args.selected, 'id' : client.id, 'playerName': args.playerName}));
+    }
+
     function handleNewGame(args) {
         console.log('-----------------------------------------------------');
         console.log(' > [handleNewGame] Validando Nickname do Jogador');
@@ -60,14 +102,15 @@ io.on('connection', client => {
         // });
             // JOIN GAME
         let checkRoom = false;
-        Object.keys(clientRooms).forEach(key => {
-            room = clientRooms[key];
 
+        
 
+        for (i in clientRooms){
+            room = clientRooms[i];
             if (room.players.length < MAXPLAYERPERROOM) {
                 if (room.players.length === 0) {
                     delete state[room.roomName];
-                    delete clientRooms[key];
+                    delete clientRooms[i];
                 }
                 else
                 {
@@ -78,10 +121,32 @@ io.on('connection', client => {
                     client.join(room.roomName);
                     console.log(` > [handleNewGame] Jogador: Id:${client.id} Nome: ${args.playerName} conectado a sala existente: ${room.roomName}`);
                     checkRoom = true;
-                    return;
+                    break;
                 }
             }
-        });
+        }
+
+        // Object.keys(clientRooms).forEach(key => {
+        //     room = clientRooms[key];
+
+        //     if (room.players.length < MAXPLAYERPERROOM) {
+        //         if (room.players.length === 0) {
+        //             delete state[room.roomName];
+        //             delete clientRooms[key];
+        //         }
+        //         else
+        //         {
+        //             console.log(' > [handleNewGame] Encontrada sala com espaço para jogadores, conectando...');
+        //             state[room.roomName].players[client.id] = (spawnPlayer({'shipStyle' : args.selected, 'id' : client.id, 'playerName': args.playerName}));
+        //             room.players.push(client.id);
+        //             client.emit('init', { roomId: room.roomName, playerId: client.id  });
+        //             client.join(room.roomName);
+        //             console.log(` > [handleNewGame] Jogador: Id:${client.id} Nome: ${args.playerName} conectado a sala existente: ${room.roomName}`);
+        //             checkRoom = true;
+        //             return;
+        //         }
+        //     }
+        // });
         
         //If there is no room, create a new one
         if (!checkRoom) {

@@ -21,12 +21,10 @@ function createGameState(args) {
     console.log(' > [createGameState] Criando player do jogo');
     newPlayer = spawnPlayer(args);
     return {
+        bulletsCount: 0,
         players: 
             { [args.id] : newPlayer },
-
-        bullets : [
-
-        ],
+            bullets : {},
     };
     
 }
@@ -167,22 +165,18 @@ function spawnBullet(state, player){
     if (!player){
         return
     }
-    state.bullets.push({
-        pos: {
-                x: (player.pos.x + player.size.x / 2) - player.bullet.size.x/2,
-                y: (player.pos.y + player.size.y / 2) - player.bullet.size.y/2,
-            },
-        angle: player.angle + (Math.random() * (player.bullet.spread - (-player.bullet.spread)) + (-player.bullet.spread)),
-        speed: player.bullet.speed,
-        distance: player.bullet.distance,
-        maxDistance: player.bullet.maxDistance,
-        maxSpeed: player.bullet.maxSpeed,
-        opacity: player.bullet.opacity,
-        size: player.bullet.size,
-        damage: player.bullet.damage,
-        fireRate: player.bullet.fireRate,
-        origin: player,
-    });
+    i = state.bulletsCount;
+
+    state.bullets[i] = JSON.parse(JSON.stringify(player.bullet));
+    state.bullets[i].origin = player.playerId;
+    state.bullets[i].pos = {
+        x: (player.pos.x + player.size.x / 2) - player.bullet.size.x/2,
+        y: (player.pos.y + player.size.y / 2) - player.bullet.size.y/2,
+    }
+    state.bullets[i].angle = player.angle + (Math.random() * (player.bullet.spread - (-player.bullet.spread)) + (-player.bullet.spread));
+
+    state.bulletsCount++;
+
 }
 
 function updatePlayerBullet(state){
@@ -262,11 +256,31 @@ function updatePlayerAngle(state){
 }
 
 function updateBulletsPosition(state){
-    state.bullets.forEach(bullet => {
 
+    
+    for (i in state.bullets){
+        bullet = state.bullets[i];
         // Move bullet if is on Screen Boundaries
         if (checkBoundaries(bullet.size, bullet.pos)){
             bullet.distance += 1;
+            const bulletSpecialProperties = {
+                3 : function Laser(){
+                    if (bullet.size.x < bullet.specialProperties.maxSize.x){
+                        bullet.size.x += bullet.specialProperties.sizeIncrease;
+                    }
+
+                    if (bullet.damage < bullet.specialProperties.maxDamage){
+                        bullet.damage += bullet.specialProperties.damageIncrease;
+                    }else if (bullet.damage > bullet.specialProperties.maxDamage){
+                        bullet.damage = bullet.specialProperties.maxDamage;
+                    }
+                }
+            }
+            
+            b = bulletSpecialProperties[bullet.type];
+            if (b){
+                b();
+            }
 
             if (bullet.speed > 0){
                 n = bullet.maxDistance - Math.percentage(15, bullet.maxDistance)
@@ -279,31 +293,13 @@ function updateBulletsPosition(state){
                 bullet.pos.x += bullet.speed * Math.cos(bullet.angle * Math.PI / 180);
                 bullet.pos.y += bullet.speed * Math.sin(bullet.angle * Math.PI / 180);
             } else {
-                state.bullets.splice(state.bullets.indexOf(bullet), 1);
+                delete state.bullets[i];
             }
         }else {
             // Destroy bullet
-            state.bullets.splice(state.bullets.indexOf(bullet), 1);
+            delete state.bullets[i];
         }
-    });
-}
-
-function checkPlayersCollision(state){
-    if (!state){
-        return
-    }
-
-    const p1 = state.players[0];
-    state.players.forEach(player => {
-        if (player !== p1){
-            if (checkCollision(p1, player)){
-                p1.colliding = true;
-            }else {
-                p1.colliding = false;
-            }
-        }
-
-    });
+    };
 }
 
 function checkBulletsCollision(state){
@@ -311,17 +307,20 @@ function checkBulletsCollision(state){
         return
     }
 
-    state.bullets.forEach(bullet => {
+    for (i in state.bullets){
+        bullet = state.bullets[i];
         Object.keys(state.players).forEach(key => {
             player = state.players[key];
-            if (player !== bullet.origin){
+            if (player.playerId !== bullet.origin){
                 if (checkCollision(bullet, player)){
                     damagePlayer(player, bullet.damage);
-                    state.bullets.splice(state.bullets.indexOf(bullet), 1);
+                    delete state.bullets[i];
                 }
             }
         });
-    });
+    };
+
+    if (Object.keys(state.bullets).length == 0) state.bulletsCount = 0;
 }
 
 function checkBoundaries(objSize, nextPos){
@@ -337,7 +336,7 @@ function checkBoundaries(objSize, nextPos){
 
 function damagePlayer(player, damage){
     player.life.health -= damage;
-    player.life.indicator = Math.lerp(0, player.life.maxHealth, 0, 1, player.life.health);
+    player.life.indicator = Math.lerp(0, player.life.maxHealth, 0.2, 1, player.life.health);
     if (player.life.indicator < 0) player.life.indicator = 0;
 
 }

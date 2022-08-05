@@ -6,9 +6,43 @@
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2" crossorigin="anonymous">
     </head>
     <style>
+
+        .joinGame {
+            display: none;
+        }
+
+        .respawn {
+            display: none;
+            position: absolute;
+            background: #231f20;
+            width: 500px;
+            border: 2px solid white;
+            border-radius: 5px;
+
+        }
+        .respawn .text{
+            font-size: 20px;
+            padding: 8px;
+        }
+
+        .xp-bar{
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+        }
+
+        progress::-moz-progress-bar { background: blue; }
+        progress::-webkit-progress-value { background: white; }
     
         #gameScreen {
             display: none;
+        }
+
+        .display-room-id
+        {
+            position:  fixed;
+            top: 0;
+            left: 0;
         }
 
 
@@ -46,13 +80,6 @@
                         <div class="col-md-6">
                             <h1 class="text-center"> This is the tale of: </h1>
                             <br/>
-                            <br/>
-                            <br/>
-                            <div class="form-group">
-                                <input type="text" placeholder="Nickname" class="form-control" id="nickname" required>
-                            </div>
-                            <br/>
-                            <!-- <h1 class="text-center">Select your character</h1> -->
                             <div class="text-center">
                                 
                                 <form>
@@ -78,10 +105,39 @@
                                     </label>
                                 </form>
                             </div>
+                            <br/>
+                            <form onsubmit="return false;">
+                                <div class="form-group">
+                                    <input type="text" placeholder="Nickname" class="form-control" id="nickname" required>
+                                </div>
+                                <div class="form-group joinGame">
+                                    <input type="text" placeholder="Room Id" class="form-control" id="roomId">
+                                </div>
 
-                            <div class="text-center">
+                                <div class="text-center startGame">
+                                    <br/>
+                                    <button id="startGameButton" class="btn btn-primary" name="startGameButton" >Start Game</button>
+                                </div>
+    
+                                <div class="text-center joinGame">
+                                    <br/>
+                                    <button id="joinGameButton" class="btn btn-primary" name="joinGameButton" type="buttom">Join</button>
+                                </div>
+                            </form>
+                            
+                            <br/>
+
+
+
+
+                            <div class="text-center startGame">
                                 <br/>
-                                <button id="startGameButton" class="btn btn-primary" id="startGame">Start Game</button>
+                                <a onclick="insertRoom();" style="cursor: pointer;">Join a room</a>
+                            </div>
+
+                            <div class="text-center joinGame">
+                                <br/>
+                                <a onclick="goBack();" style="cursor: pointer;">Go back</a>
                             </div>
                             
                         </div>
@@ -97,23 +153,59 @@
         <section id="gameScreen" class="vh-100">
             <div class="container h-100">
                 <div class="h-100">
+                    
                     <div id="canvas-stack" class="d-flex flex-column align-items-center justify-content-center h-100">
                         
-                        <form>
-                            <!-- <label>
-                                <progress id="health" value="50" max="100"></progress>
-                            </label> -->
-                            <label>
+
+                                <p class="display-room-id"  id="gameCodeDisplay"> Room Id:  </p>
+            
                                 <canvas id="canvas"></canvas>
-                            </label>
-                        </form>
-                        
+                                <progress class="xp-bar" id="xpBar" value="0" max="100"></progress>
+                                <br/>
+                                <div class="text-center respawn">
+                                
+                                    <form>
+                                        <br/>
+                                        <label class="text">
+                                            <p>
+                                                SOME TEXT ETC... SOME TEXT ETC... SOME TEXT ETC... SOME TEXT ETC... SOME TEXT ETC...
+                                            </p>
+                                        </label>
+                                        <br/><br/>
+                                        <label>
+                                            
+                                            <input id="ship1" type="radio" name="ship-selector-respawn" value="ship1" checked/>
+                                            <img src="assets/img/ship1.png">
+                                            <span class="checkmark"></span>
+                                        </label>
+    
+                                        <label>
+                                            
+                                            <input id="ship2" type="radio" name="ship-selector-respawn" value="ship2" />
+                                            <img src="assets/img/ship2.png">
+                                            <span class="checkmark"></span>
+                                        </label>
+    
+                                        <label>
+                                            
+                                            <input id="ship3" type="radio" name="ship-selector-respawn" value="ship3" />
+                                            <img src="assets/img/ship3.png">
+                                            <span class="checkmark"></span>
+                                        </label>
+                                    </form>
+                                    <br/>
+                                    <button id="respawnBt" class="btn btn-primary text-center" name="respawnBt" type="buttom">Again?</button>
+                                    <br/>
+                                    <p></p>
+                                </div>
+                                
+
                     </div>
                 </div>
             </div>
         </section>
         <script src="https://cdn.socket.io/4.5.1/socket.io.min.js"></script>
-        <script src="/socket.io/socket.io.js"></script>
+        <!-- <script src="/socket.io/socket.io.js"></script> -->
         <script src="index.js"></script>
 
     </body>
