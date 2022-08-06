@@ -174,6 +174,7 @@ function spawnBullet(state, player){
         y: (player.pos.y + player.size.y / 2) - player.bullet.size.y/2,
     }
     state.bullets[i].angle = player.angle + (Math.random() * (player.bullet.spread - (-player.bullet.spread)) + (-player.bullet.spread));
+    state.bullets[i].speed = player.bullet.maxSpeed;
 
     state.bulletsCount++;
 
@@ -271,8 +272,10 @@ function updateBulletsPosition(state){
 
                     if (bullet.damage < bullet.specialProperties.maxDamage){
                         bullet.damage += bullet.specialProperties.damageIncrease;
+
                     }else if (bullet.damage > bullet.specialProperties.maxDamage){
                         bullet.damage = bullet.specialProperties.maxDamage;
+                        
                     }
                 }
             }
@@ -314,6 +317,7 @@ function checkBulletsCollision(state){
             if (player.playerId !== bullet.origin){
                 if (checkCollision(bullet, player)){
                     damagePlayer(player, bullet.damage);
+                    player.lastHitBy = bullet.origin;
                     delete state.bullets[i];
                 }
             }
@@ -341,20 +345,94 @@ function damagePlayer(player, damage){
 
 }
 
+function levelUpPlayer(player){
+    const levelUpProperties = {
+        'ship1' : function(){
+            player.level.current += 1;
+            player.life.maxHealth += 30;
+            player.bullet.fireRate -= 0.01;
+            if (player.bullet.fireRate < 3) player.bullet.fireRate = 3;
+            player.bullet.maxDistance += 15;
+            player.bullet.maxSpeed += 3;
+            player.bullet.damage += 10;
+            player.bullet.size.x += 5;
+            player.bullet.size.y += 5;
+            player.size.x += 5;
+            player.size.y += 5;
+        },
+        'ship2' : function(){
+            player.level.current += 1;
+            player.life.maxHealth += 5;
+            player.speed += 0.2;
+            player.bullet.fireRate -= 0.10;
+            if (player.bullet.fireRate < 0.05) player.bullet.fireRate = 0.05;
+            player.bullet.maxDistance += 1;
+            player.bullet.maxSpeed += 2;
+            player.bullet.damage += 2;
+            player.bullet.size.x += 0.5;
+            player.bullet.size.y += 0.5;
+            player.size.x += 2;
+            player.size.y += 2;
+        },
+        'ship3' : function(){
+            player.level.current += 1;
+            player.life.maxHealth += 2;
+            player.speed += 1;
+            player.bullet.fireRate -= 0.05;
+            if (player.bullet.fireRate < 2) player.bullet.fireRate = 2;
+            player.bullet.maxDistance += 10;
+            player.bullet.maxSpeed += 0.1;
+            player.bullet.damage += 5;
+            player.bullet.specialProperties.maxDamage += 20;
+            player.bullet.specialProperties.damageIncrease += 0.25;
+            player.bullet.specialProperties.maxSize.x += 1;
+            player.bullet.size.x += 0.5;
+            player.bullet.size.y += 0.5;
+            player.size.x += 1.5;
+            player.size.y += 1.5;
+        },
+    }
+
+    levelUpProperties[player.shipStyle]();
+    player.level.exp.max += 100; 
+    player.level.exp.indicator = 0;
+    player.life.health = player.life.maxHealth;
+    player.life.indicator = 1;
+
+}
+
+function givePlayerExp(player, ammount){
+    ammount += 500;
+    do {
+        expToNext = player.level.exp.max - player.level.exp.current;
+        if (ammount < expToNext){
+            player.level.exp.current += ammount;
+            player.level.exp.indicator = Math.lerp(0, player.level.exp.max, 0, 100, player.level.exp.current);
+            ammount = 0;
+        }else{
+            levelUpPlayer(player);
+            player.level.exp.totalEarned += ammount;
+            ammount -= expToNext;
+            player.level.exp.current = 0;
+        }
+    } while (ammount > 0);
+}
+
 function checkPlayerAlive(state){
     if (!state){
         return
     }
 
     let deathPlayer;
-    Object.keys(state.players).forEach(key => {
-        player = state.players[key];
+    for (i in state.players){
+        player = state.players[i];
         if (player.life.health <= 0){
-            // console.log(' > [checkPlayerAlive]<Game> Player ', player.playerName, ' is dead');
+            xp = player.level.exp.totalEarned ? Math.percentage(40, player.level.exp.totalEarned) : 0;
+            givePlayerExp(state.players[player.lastHitBy], xp);
             deathPlayer = player;
-            return;
+            break;
         }
-    });
+    };
 
     return deathPlayer ? deathPlayer : null;
 }

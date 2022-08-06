@@ -143,27 +143,32 @@ function drawPlayer(players, color) {
         //     ctx.fillText(`${playerName}`, (playerState.pos.x + playerState.size.x/2) , playerState.pos.y - 20);
         // }
 
-        //Draw players name
-        ctx.fillStyle = "#ffffff";
-        ctx.textAlign = "center";
-        ctx.fillText(`${playerState.playerName}`, (playerState.pos.x + playerState.size.x/2) , playerState.pos.y - 20);
+
 
         size = playerState.size;
         ctx.fillStyle = color;
 
         ctx.save();
+
         //Draw player img
         ctx.translate(playerState.pos.x + size.x/2 , playerState.pos.y + size.y/2);
         ctx.rotate(playerState.angle * Math.PI / 180);
         ctx.translate(-(playerState.pos.x + playerState.size.x/2) , -(playerState.pos.y + playerState.size.y/2));
-        
-
         ctx.globalAlpha = playerState.life.indicator;
         ctx.drawImage(img_assets[playerState.shipStyle], playerState.pos.x, playerState.pos.y, size.x, size.y,);
 
-        
-
         ctx.restore();
+
+        //Draw players name
+        ctx.fillStyle = "#ffffff";
+        ctx.textAlign = "center";
+        ctx.font = "12px Arial";
+        posYModifier = 20;
+        posXModifier = 70;
+        posY = (playerState.pos.y - 20) < posYModifier ? posYModifier : (playerState.pos.y - 20);
+        nextPosX = (playerState.pos.x + playerState.size.x/2);
+        posX = nextPosX < posXModifier ? posXModifier : nextPosX > canvas.width - posXModifier ? canvas.width - posXModifier : nextPosX;
+        ctx.fillText(`- ${playerState.level.current} -  ${playerState.playerName}`, posX , posY);
         
         // ctx.fillRect(playerState.pos.x+size/2, playerState.pos.y+size/2, 15, 2); //CENTER OF OBJECT
         

@@ -7,7 +7,7 @@ const shipProperties = {
         lastHitBy: '',
         life : {
             health: 0,
-            maxHealth: 200,
+            maxHealth: 160,
             indicator: 1,
         },
         level : {
@@ -15,7 +15,7 @@ const shipProperties = {
             max: 0,
             exp : {
                 current: 0,
-                max: 0,
+                max: 100,
                 indicator : 0,
                 totalEarned : 0,
             },
@@ -72,7 +72,7 @@ const shipProperties = {
             max: 0,
             exp : {
                 current: 0,
-                max: 0,
+                max: 100,
                 indicator : 0,
                 totalEarned : 0,
             },
@@ -130,7 +130,7 @@ const shipProperties = {
             max: 0,
             exp : {
                 current: 0,
-                max: 0,
+                max: 100,
                 indicator : 0,
             },
         },
@@ -140,7 +140,7 @@ const shipProperties = {
         },
         bullet: {
             type: 3,
-            damage: 32,
+            damage: 10,
             speed: 18,
             maxSpeed: 18,
             spread: 1.2,
