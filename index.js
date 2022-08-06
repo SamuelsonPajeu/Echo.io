@@ -168,7 +168,9 @@ function drawPlayer(players, color) {
         posY = (playerState.pos.y - 20) < posYModifier ? posYModifier : (playerState.pos.y - 20);
         nextPosX = (playerState.pos.x + playerState.size.x/2);
         posX = nextPosX < posXModifier ? posXModifier : nextPosX > canvas.width - posXModifier ? canvas.width - posXModifier : nextPosX;
-        ctx.fillText(`- ${playerState.level.current} -  ${playerState.playerName}`, posX , posY);
+        ctx.fillText(`-( ${playerState.level.current} )- ${playerState.playerName}`, posX , posY);
+        // ctx.fillText(`Player Xp: ${playerState.level.exp.current} | ${playerState.level.exp.max}\n Total Earned: ${playerState.level.exp.totalEarned}`, posX, posY + 100,);
+        ctx.fillText(`Player Hp: ${playerState.life.health} | ${playerState.life.maxHealth}\n Damage: ${playerState.bullet.damage} | ${playerState.bullet.specialProperties.maxDamage} `, posX, posY + 100,);
         
         // ctx.fillRect(playerState.pos.x+size/2, playerState.pos.y+size/2, 15, 2); //CENTER OF OBJECT
         

@@ -309,22 +309,33 @@ function checkBulletsCollision(state){
     if (!state){
         return
     }
+    
 
     for (i in state.bullets){
         bullet = state.bullets[i];
-        Object.keys(state.players).forEach(key => {
-            player = state.players[key];
+        for (j in state.players){ 
+            player = state.players[j];
             if (player.playerId !== bullet.origin){
+                const bulletSpecialProperties = {
+                    2 : function LifeSteal(){
+                        healPlayer(state.players[bullet.origin], state.players[bullet.origin].bullet.specialProperties.lifeSteal);
+                    }
+                }
+                
                 if (checkCollision(bullet, player)){
+                    b = bulletSpecialProperties[bullet.type];
+                    if (b){
+                        b();
+                    }
                     damagePlayer(player, bullet.damage);
                     player.lastHitBy = bullet.origin;
                     delete state.bullets[i];
                 }
-            }
-        });
+            };
+        };
     };
-
     if (Object.keys(state.bullets).length == 0) state.bulletsCount = 0;
+
 }
 
 function checkBoundaries(objSize, nextPos){
@@ -341,8 +352,18 @@ function checkBoundaries(objSize, nextPos){
 function damagePlayer(player, damage){
     player.life.health -= damage;
     player.life.indicator = Math.lerp(0, player.life.maxHealth, 0.2, 1, player.life.health);
-    if (player.life.indicator < 0) player.life.indicator = 0;
+    if (player.life.health <= 0){
+        player.life.health = 0;
+    }
 
+}
+
+function healPlayer(player, heal){
+    player.life.health += heal;
+    player.life.indicator = Math.lerp(0, player.life.maxHealth, 0.2, 1, player.life.health);
+    if (player.life.health > player.life.maxHealth){
+        player.life.health = player.life.maxHealth;
+    }
 }
 
 function levelUpPlayer(player){
@@ -352,9 +373,9 @@ function levelUpPlayer(player){
             player.life.maxHealth += 30;
             player.bullet.fireRate -= 0.01;
             if (player.bullet.fireRate < 3) player.bullet.fireRate = 3;
-            player.bullet.maxDistance += 15;
-            player.bullet.maxSpeed += 3;
-            player.bullet.damage += 10;
+            player.bullet.maxDistance += 3;
+            player.bullet.maxSpeed += 0.15;
+            player.bullet.damage += 15;
             player.bullet.size.x += 5;
             player.bullet.size.y += 5;
             player.size.x += 5;
@@ -362,26 +383,27 @@ function levelUpPlayer(player){
         },
         'ship2' : function(){
             player.level.current += 1;
-            player.life.maxHealth += 5;
+            player.life.maxHealth += 10;
             player.speed += 0.2;
-            player.bullet.fireRate -= 0.10;
+            player.bullet.fireRate -= 0.05;
             if (player.bullet.fireRate < 0.05) player.bullet.fireRate = 0.05;
-            player.bullet.maxDistance += 1;
-            player.bullet.maxSpeed += 2;
-            player.bullet.damage += 2;
+            player.bullet.maxDistance -= 0.5;
+            player.bullet.maxSpeed += 1;
+            player.bullet.damage += 0.25;
+            player.bullet.specialProperties.lifeSteal += 0.5;
             player.bullet.size.x += 0.5;
             player.bullet.size.y += 0.5;
-            player.size.x += 2;
-            player.size.y += 2;
+            player.size.x += 2.5;
+            player.size.y += 2.5;
         },
         'ship3' : function(){
             player.level.current += 1;
             player.life.maxHealth += 2;
-            player.speed += 1;
-            player.bullet.fireRate -= 0.05;
+            player.speed += 0.30;
+            player.bullet.fireRate -= 0.025;
             if (player.bullet.fireRate < 2) player.bullet.fireRate = 2;
             player.bullet.maxDistance += 10;
-            player.bullet.maxSpeed += 0.1;
+            player.bullet.maxSpeed += 0.30;
             player.bullet.damage += 5;
             player.bullet.specialProperties.maxDamage += 20;
             player.bullet.specialProperties.damageIncrease += 0.25;
@@ -402,16 +424,17 @@ function levelUpPlayer(player){
 }
 
 function givePlayerExp(player, ammount){
-    ammount += 500;
+    ammount += 3000;
     do {
         expToNext = player.level.exp.max - player.level.exp.current;
         if (ammount < expToNext){
             player.level.exp.current += ammount;
+            player.level.exp.totalEarned += ammount;
             player.level.exp.indicator = Math.lerp(0, player.level.exp.max, 0, 100, player.level.exp.current);
             ammount = 0;
         }else{
             levelUpPlayer(player);
-            player.level.exp.totalEarned += ammount;
+            player.level.exp.totalEarned += expToNext;
             ammount -= expToNext;
             player.level.exp.current = 0;
         }

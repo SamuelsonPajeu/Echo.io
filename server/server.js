@@ -6,7 +6,7 @@ const { ENG, PTBR } = require('./forbidden');
 
 const state = {};
 const clientRooms = {};
-const MAXPLAYERPERROOM = 2;
+const MAXPLAYERPERROOM = 10;
 const MAXROOMS = 10;
 
 io.on('connection', client => {

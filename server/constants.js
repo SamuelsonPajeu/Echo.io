@@ -102,7 +102,7 @@ const shipProperties = {
                 y : 0,
             },
             specialProperties : {
-                
+                lifeSteal : 3,
             },
         },
         angle: 0,
@@ -123,7 +123,6 @@ const shipProperties = {
             health: 0,
             maxHealth: 60,
             indicator: 1,
-            totalEarned : 0,
         },
         level : {
             current: 1,
@@ -132,6 +131,7 @@ const shipProperties = {
                 current: 0,
                 max: 100,
                 indicator : 0,
+                totalEarned : 0,
             },
         },
         pos: {
@@ -143,7 +143,7 @@ const shipProperties = {
             damage: 10,
             speed: 18,
             maxSpeed: 18,
-            spread: 1.2,
+            spread: 0.8,
             distance: 0,
             maxDistance: 70,
             opacity:1,
@@ -152,7 +152,7 @@ const shipProperties = {
                 y: 5,
             },
             angle: 0,
-            fireRate: 2,
+            fireRate: 3,
             lastFire: 0,
             pos : {
                 x : 0,
