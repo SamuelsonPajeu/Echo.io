@@ -2,7 +2,7 @@ const { createStateMachine } = require('./player-statemachine');
 const { checkCollision} = require('./checkcollision');
 const { FPS, returnShip } = require('./constants');
 
-const CANVASSIZE = {x: 1500, y: 900};
+const CANVASSIZE = {x: 2000, y: 2000};
 
 
 Math.fmod = function (a,b) { return Number((a - (Math.floor(a / b) * b)).toPrecision(8)); };

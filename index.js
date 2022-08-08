@@ -11,8 +11,8 @@ socket.on('roomDoesNotExist', handleRoomDoesNotExist);
 socket.on('roomFull', handleRoomFull);
 
 
-
-const BG_COLOUR = "#231f20";
+const GAME_COLOUR = "#231f20";
+const BG_COLOUR = "#20262E";
 const BULLET_COLOUR = "#c2c2c2";
 const PLAYER_COLOUR = "#ff0000";
 const COLLIDING_COLOUR = "#7CFC00";
@@ -107,6 +107,10 @@ function start() {
     ctx = canvas.getContext('2d');
     canvas.width = 1500;
     canvas.height = 900;
+    virtualCanvas = {
+        width: 2000,
+        height: 2000,
+    }
     ctx.fillStyle = BG_COLOUR;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
@@ -132,7 +136,7 @@ function start() {
 function drawScreen(state) {
     // GAME CANVAS
     ctx.fillStyle = BG_COLOUR;
-    ctx.globalCompositeOperation = 'destination-under';
+    // ctx.globalCompositeOperation = 'destination-under';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
 }
@@ -146,12 +150,15 @@ function drawPlayer(players, color) {
                 get x () { return -(canvas.width / 2 - playerState.pos.x) },
                 get y () { return -(canvas.height / 2 - playerState.pos.y) }
             }
-            ctx.strokeRect(-camera.x,0,canvas.width,canvas.height);
+            ctx.strokeStyle = "#ffffff";
+            ctx.strokeRect(-camera.x,-camera.y,virtualCanvas.width,virtualCanvas.height);
+            // ctx.fillStyle = GAME_COLOUR;
+            // ctx.fillRect(-camera.x, -camera.y, virtualCanvas.width, virtualCanvas.height);
         }else
         {
             camera = {
-                get x () { return 0 },
-                get y () { return 0 }
+                get x () { return -(canvas.width / 2 - players[playerId].pos.x) },
+                get y () { return -(canvas.height / 2 - players[playerId].pos.y) }
             }
         }
 
@@ -172,11 +179,11 @@ function drawPlayer(players, color) {
         ctx.save();
 
         //Draw player img
-        ctx.translate((playerState.pos.x - camera.x) + size.x/2 , playerState.pos.y + size.y/2);
+        ctx.translate((playerState.pos.x - camera.x) + size.x/2 , (playerState.pos.y - camera.y) + size.y/2);
         ctx.rotate(playerState.angle * Math.PI / 180);
-        ctx.translate(-((playerState.pos.x - camera.x) + playerState.size.x/2) , -(playerState.pos.y  + playerState.size.y/2));
+        ctx.translate(-((playerState.pos.x - camera.x) + playerState.size.x/2) , -((playerState.pos.y - camera.y)  + playerState.size.y/2));
         ctx.globalAlpha = playerState.life.indicator;
-        ctx.drawImage(img_assets[playerState.shipStyle], (playerState.pos.x - camera.x), playerState.pos.y, size.x, size.y,);
+        ctx.drawImage(img_assets[playerState.shipStyle], (playerState.pos.x - camera.x), (playerState.pos.y - camera.y), size.x, size.y,);
 
         ctx.restore();
 
@@ -184,11 +191,19 @@ function drawPlayer(players, color) {
         ctx.fillStyle = "#ffffff";
         ctx.textAlign = "center";
         ctx.font = "12px Arial";
-        posYModifier = 20;
-        posXModifier = 70;
-        posY = (playerState.pos.y - 30) < posYModifier ? posYModifier : (playerState.pos.y - 30);
-        nextPosX = (playerState.pos.x  - camera.x + playerState.size.x/2);
-        posX = nextPosX < posXModifier ? posXModifier : nextPosX > canvas.width - posXModifier ? canvas.width - posXModifier : nextPosX;
+        posYModifier = 20 - camera.y;
+        posXModifier = 70 - camera.x;
+        posY = (playerState.pos.y - camera.y - 30 ) < posYModifier ? posYModifier : (playerState.pos.y - camera.y - 30);
+        nextPosX = (playerState.pos.x - camera.x + playerState.size.x/2);
+        
+
+        if (playerState.playerId === playerId) {
+            posX = nextPosX <  posXModifier ?  posXModifier :  nextPosX;
+            // posX = nextPosX <  posXModifier ?  posXModifier < :  nextPosX;
+
+        }else {
+            posX = nextPosX;
+        }
         ctx.fillText(`-( ${playerState.level.current} )- ${playerState.playerName}`, posX , posY);
         // ctx.fillText(`Player Xp: ${playerState.level.exp.current} | ${playerState.level.exp.max}\n Total Earned: ${playerState.level.exp.totalEarned}`, posX, posY + 100,);
         // ctx.fillText(`Player Hp: ${playerState.life.health} | ${playerState.life.maxHealth}\n Damage: ${playerState.bullet.damage} | ${playerState.bullet.specialProperties.maxDamage} `, posX, posY + 100,);
@@ -237,18 +252,18 @@ function drawBullets(bullets, color, players) {
         }else
         {
             b_camera = {
-                get x () { return 0 },
-                get y () { return 0 }
+                get x () { return -(canvas.width / 2 - players[playerId].pos.x) },
+                get y () { return -(canvas.height / 2 - players[playerId].pos.y) }
             }
         }
 
         ctx.fillStyle = color;
         ctx.save();
-        ctx.translate((bullet.pos.x - b_camera.x) + bullet.size.x/2 , bullet.pos.y + bullet.size.y/2);
+        ctx.translate((bullet.pos.x - b_camera.x) + bullet.size.x/2 , (bullet.pos.y - b_camera.y) + bullet.size.y/2);
         ctx.rotate(bullet.angle * Math.PI / 180);
-        ctx.translate(-((bullet.pos.x - b_camera.x) + bullet.size.x/2) , -(bullet.pos.y + bullet.size.y/2));
+        ctx.translate(-((bullet.pos.x - b_camera.x) + bullet.size.x/2) , -((bullet.pos.y - b_camera.y) + bullet.size.y/2));
         ctx.globalAlpha = bullet.opacity;
-        ctx.fillRect((bullet.pos.x - b_camera.x), bullet.pos.y, bullet.size.x, bullet.size.y);
+        ctx.fillRect((bullet.pos.x - b_camera.x), (bullet.pos.y - b_camera.y), bullet.size.x, bullet.size.y);
 
         ctx.restore();
     };
@@ -292,6 +307,8 @@ function handleGameState(gameState) {
     gameState = JSON.parse(gameState);
 
     requestAnimationFrame(() => drawScreen(gameState)); 
+    
+    
     requestAnimationFrame(() => drawBullets(gameState.bullets, BULLET_COLOUR, gameState.players));
     requestAnimationFrame(() => drawPlayer(gameState.players, PLAYER_COLOUR));
     requestAnimationFrame(() => drawXpBar(gameState.players));
