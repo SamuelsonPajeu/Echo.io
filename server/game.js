@@ -36,6 +36,8 @@ function spawnPlayer(args){
     player.stateMachine = createStateMachine(player);
     player.playerId = args.id;
     player.playerName = args.playerName;
+    // Level
+    player.level.max = 15;
 
     // Random Position
     player.pos = {
@@ -46,6 +48,14 @@ function spawnPlayer(args){
     // Random Angle
     player.angle = Math.floor(Math.random() * 360);
     player.life.health = player.life.maxHealth;
+    player.status = {
+        invulnerability : {
+            name : 'invulnerability',
+            active: true,
+            duration: 5,
+            direction: 'down',
+        } 
+    }
 
     return player;
 }
@@ -61,6 +71,7 @@ function gameLoop(state){
     updateBulletsPosition(state);
     checkBulletsCollision(state);
     updatePlayerBullet(state);
+    updatePlayerStatus(state);
     //Update player position
 
 }
@@ -193,6 +204,7 @@ function updatePlayerBullet(state){
         }
 
         if (player.stateMachine.movement.shooting.state === 'ON'){
+            cancelPlayerStatus(player, 'invulnerability');
             if (player.bullet.lastFire === 0){
                 spawnBullet(state, player);
                 player.bullet.lastFire = player.bullet.fireRate;
@@ -209,32 +221,47 @@ function updatePlayerPosition(state){
     
     // console.log(' > [updatePlayerPosition] Atualizando posição dos players');
 
-    Object.keys(state.players).forEach(key => {
-        player = state.players[key];
+
+    for (i in state.players){
+        player = state.players[i];
         stateMachine = player.stateMachine.movement;
 
-        if (stateMachine.foward.state === 'ON'){
-            nextPos = {
-                x: player.pos.x + player.speed * Math.cos(player.angle * Math.PI / 180),
-                y: player.pos.y + player.speed * Math.sin(player.angle * Math.PI / 180),
-            }
+        nextPosFoward = {
+            x: player.pos.x + player.speed * Math.cos(player.angle * Math.PI / 180),
+            y: player.pos.y + player.speed * Math.sin(player.angle * Math.PI / 180),
+        }
+        nextPosBackward = {
+            x: player.pos.x - (player.speed * 0.5) * Math.cos(player.angle * Math.PI / 180),
+            y: player.pos.y - (player.speed * 0.5) * Math.sin(player.angle * Math.PI / 180),
+        }
 
-            if (checkBoundaries(player.size, nextPos)){
-                player.pos = nextPos;
+        canGoFoward = checkBoundaries(player.size, nextPosFoward);
+        canGoBackward = checkBoundaries(player.size, nextPosBackward);
+        stuck = (!canGoFoward && !canGoBackward);
+
+        
+
+        if (stuck){
+            if (player.pos.x < 0)player.pos.x = 0;
+            if (player.pos.y < 0)player.pos.y = 0;
+            if (player.pos.x > CANVASSIZE.x - player.size.x)player.pos.x = CANVASSIZE.x - player.size.x;
+            if (player.pos.y > CANVASSIZE.y - player.size.y)player.pos.y = CANVASSIZE.y - player.size.y;
+        }
+
+        if (stateMachine.foward.state === 'ON'){
+
+            if (canGoFoward){
+                player.pos = nextPosFoward;
             }
         }
         else if (stateMachine.backward.state === 'ON'){
-            nextPos = {
-                x: player.pos.x - (player.speed * 0.5) * Math.cos(player.angle * Math.PI / 180),
-                y: player.pos.y - (player.speed * 0.5) * Math.sin(player.angle * Math.PI / 180),
-            }
 
-            if (checkBoundaries(player.size, nextPos)){
-                player.pos = nextPos;
+            if (canGoBackward){
+                player.pos = nextPosBackward;
             }
 
         }
-    });
+    };
 }
 
 function updatePlayerAngle(state){
@@ -262,7 +289,7 @@ function updateBulletsPosition(state){
     for (i in state.bullets){
         bullet = state.bullets[i];
         // Move bullet if is on Screen Boundaries
-        if (checkBoundaries(bullet.size, bullet.pos)){
+        if (checkBulletBoundaries(bullet.size, bullet.pos)){
             bullet.distance += 1;
             const bulletSpecialProperties = {
                 3 : function Laser(){
@@ -305,6 +332,73 @@ function updateBulletsPosition(state){
     };
 }
 
+function cancelPlayerStatus(player,statusName) {
+    if (!player){
+        return
+    }
+    playerStatus = player.status[statusName];
+    playerStatus.active = false;
+    playerStatus.duration = 0;
+
+    specialStateEffectsOnEnd = {
+        'invulnerability' : function(){
+            player.life.indicator = Math.lerp(0, player.life.maxHealth, 0.3, 1, player.life.health);
+        }
+    }
+
+    s = specialStateEffectsOnEnd[statusName];
+    if (s)s();
+    
+}
+
+function updatePlayerStatus(state){
+    for (i in state.players){
+        player = state.players[i];
+        for (j in player.status){
+            j = player.status[j];
+            specialStateEffectsOnUpdate = {
+                'invulnerability' : function(){
+                    if (player.life.indicator > 0.2 && j.direction == 'down'){
+                        player.life.indicator -= 0.1;
+                    }
+                    else if (player.life.indicator < 1 && j.direction == 'up'){
+                        player.life.indicator += 0.1;
+                    }
+
+                    if (player.life.indicator >= 1 && j.direction == 'up'){
+                        j.direction = 'down';
+                    }
+                    else if (player.life.indicator <= 0.2 && j.direction == 'down'){
+                        j.direction = 'up';
+                    }
+
+                }
+            }
+
+            specialStateEffectsOnEnd = {
+                'invulnerability' : function(){
+                    player.life.indicator = Math.lerp(0, player.life.maxHealth, 0.3, 1, player.life.health);
+                }
+            }
+            
+
+
+            if (j.active && j.duration > 0){
+                j.duration -= FPS/1000;
+                s = specialStateEffectsOnUpdate[j.name];
+                if (s)s();
+                
+            }else if (j.active && j.duration <= 0){
+                s = specialStateEffectsOnEnd[j.name];
+                if (s)s();
+                j.active = false;
+                j.duration = 0;
+            }
+        }
+    }
+    
+}
+
 function checkBulletsCollision(state){
     if (!state){
         return
@@ -313,17 +407,43 @@ function checkBulletsCollision(state){
 
     for (i in state.bullets){
         bullet = state.bullets[i];
+        const bulletSpecialProperties = {
+            1 : function (){
+                for (x in state.bullets){
+                    bullet2 = state.bullets[x];
+                    if (bullet2 != bullet && bullet2.origin != bullet.origin){
+                        if (checkCollision(bullet, bullet2)){
+                            if (bullet.damage == bullet2.damage){
+                                delete state.bullets[i];
+                                delete state.bullets[x];
+                            } else if (bullet.damage > bullet2.damage){
+                                bullet.damage -= bullet2.damage;
+                                delete state.bullets[x];
+                            } else {
+                                bullet2.damage -= bullet.damage;
+                                delete state.bullets[i];
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        b = bulletSpecialProperties[bullet.type];
+        if (b){
+            b();
+        }
+
         for (j in state.players){ 
             player = state.players[j];
             if (player.playerId !== bullet.origin){
-                const bulletSpecialProperties = {
+                const bulletSpecialPropertiesOnHitPlayer = {
                     2 : function LifeSteal(){
                         healPlayer(state.players[bullet.origin], state.players[bullet.origin].bullet.specialProperties.lifeSteal);
                     }
                 }
                 
                 if (checkCollision(bullet, player)){
-                    b = bulletSpecialProperties[bullet.type];
+                    b = bulletSpecialPropertiesOnHitPlayer[bullet.type];
                     if (b){
                         b();
                     }
@@ -349,9 +469,22 @@ function checkBoundaries(objSize, nextPos){
 
 }
 
+
+function checkBulletBoundaries(objSize, nextPos){
+    
+    
+    if (nextPos.x < 0 - objSize.x || nextPos.x > CANVASSIZE.x + objSize.x || nextPos.y < 0 - + objSize.y || nextPos.y > CANVASSIZE.y  + objSize.y ){
+        return false;
+    } else {
+        return true;
+    }
+
+}
+
 function damagePlayer(player, damage){
+    if (player.status.invulnerability.active) return;
     player.life.health -= damage;
-    player.life.indicator = Math.lerp(0, player.life.maxHealth, 0.2, 1, player.life.health);
+    player.life.indicator = Math.lerp(0, player.life.maxHealth, 0.3, 1, player.life.health);
     if (player.life.health <= 0){
         player.life.health = 0;
     }
@@ -360,7 +493,7 @@ function damagePlayer(player, damage){
 
 function healPlayer(player, heal){
     player.life.health += heal;
-    player.life.indicator = Math.lerp(0, player.life.maxHealth, 0.2, 1, player.life.health);
+    player.life.indicator = Math.lerp(0, player.life.maxHealth, 0.3, 1, player.life.health);
     if (player.life.health > player.life.maxHealth){
         player.life.health = player.life.maxHealth;
     }
@@ -370,27 +503,27 @@ function levelUpPlayer(player){
     const levelUpProperties = {
         'ship1' : function(){
             player.level.current += 1;
-            player.life.maxHealth += 30;
+            player.life.maxHealth += 60;
             player.bullet.fireRate -= 0.01;
             if (player.bullet.fireRate < 3) player.bullet.fireRate = 3;
             player.bullet.maxDistance += 3;
             player.bullet.maxSpeed += 0.15;
             player.bullet.damage += 15;
-            player.bullet.size.x += 5;
-            player.bullet.size.y += 5;
-            player.size.x += 5;
-            player.size.y += 5;
+            player.bullet.size.x += 8;
+            player.bullet.size.y += 8;
+            player.size.x += 8;
+            player.size.y += 8;
         },
         'ship2' : function(){
             player.level.current += 1;
             player.life.maxHealth += 10;
             player.speed += 0.2;
-            player.bullet.fireRate -= 0.05;
+            player.bullet.fireRate -= 0.015;
             if (player.bullet.fireRate < 0.05) player.bullet.fireRate = 0.05;
             player.bullet.maxDistance -= 0.5;
             player.bullet.maxSpeed += 1;
             player.bullet.damage += 0.25;
-            player.bullet.specialProperties.lifeSteal += 0.5;
+            player.bullet.specialProperties.lifeSteal += 0.025;
             player.bullet.size.x += 0.5;
             player.bullet.size.y += 0.5;
             player.size.x += 2.5;
@@ -400,16 +533,15 @@ function levelUpPlayer(player){
             player.level.current += 1;
             player.life.maxHealth += 2;
             player.speed += 0.30;
-            player.bullet.fireRate -= 0.025;
             if (player.bullet.fireRate < 2) player.bullet.fireRate = 2;
             player.bullet.maxDistance += 10;
             player.bullet.maxSpeed += 0.30;
             player.bullet.damage += 5;
-            player.bullet.specialProperties.maxDamage += 20;
+            player.bullet.specialProperties.maxDamage += 30;
             player.bullet.specialProperties.damageIncrease += 0.25;
             player.bullet.specialProperties.maxSize.x += 1;
             player.bullet.size.x += 0.5;
-            player.bullet.size.y += 0.5;
+            // player.bullet.size.y += 0.5;
             player.size.x += 1.5;
             player.size.y += 1.5;
         },
@@ -424,22 +556,28 @@ function levelUpPlayer(player){
 }
 
 function givePlayerExp(player, ammount){
-    ammount += 3000;
-    do {
-        expToNext = player.level.exp.max - player.level.exp.current;
-        if (ammount < expToNext){
-            player.level.exp.current += ammount;
-            player.level.exp.totalEarned += ammount;
-            player.level.exp.indicator = Math.lerp(0, player.level.exp.max, 0, 100, player.level.exp.current);
-            ammount = 0;
-        }else{
-            levelUpPlayer(player);
-            player.level.exp.totalEarned += expToNext;
-            ammount -= expToNext;
-            player.level.exp.current = 0;
-        }
-    } while (ammount > 0);
-}
+    ammount += 10000000;
+    
+        
+        do {
+            if (player.level.current < player.level.max){
+                expToNext = player.level.exp.max - player.level.exp.current;
+                if (ammount < expToNext){
+                    player.level.exp.current += ammount;
+                    player.level.exp.totalEarned += ammount;
+                    player.level.exp.indicator = Math.lerp(0, player.level.exp.max, 0, 100, player.level.exp.current);
+                    ammount = 0;
+                }else{
+                    levelUpPlayer(player);
+                    player.level.exp.totalEarned += expToNext;
+                    ammount -= expToNext;
+                    player.level.exp.current = 0;
+                }
+            }else{break;}
+        } while (ammount > 0);
+        
+    }
+
 
 function checkPlayerAlive(state){
     if (!state){
@@ -452,6 +590,7 @@ function checkPlayerAlive(state){
         if (player.life.health <= 0){
             xp = player.level.exp.totalEarned ? Math.percentage(40, player.level.exp.totalEarned) : 0;
             givePlayerExp(state.players[player.lastHitBy], xp);
+            healPlayer(state.players[player.lastHitBy], Math.percentage(10, state.players[player.lastHitBy].life.maxHealth));
             deathPlayer = player;
             break;
         }

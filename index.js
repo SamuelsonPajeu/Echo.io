@@ -1,5 +1,7 @@
 const socket = io('http://localhost:3000', { transports : ['websocket'] });
 
+Math.lerp = function (X1, X2, Y1, Y2, X3) { return Number((X2 - X3) * Y1 + (X3 - X1) * Y2) / (X2 - X1);};
+
 // LISTEN EVENTS
 socket.on('init', handleInit);
 socket.on('gameState', handleGameState);
@@ -33,11 +35,14 @@ const joinGameObjs = document.getElementsByClassName('joinGame');
 const startGameObjs = document.getElementsByClassName('startGame');
 const respawnObjs = document.getElementsByClassName('respawn');
 const xpBar = document.getElementById('xpBar');
+const deathText = document.getElementById('death-text');
 
 
 startGameButton.addEventListener('click', newGame);
 joinGameButton.addEventListener('click', joinGame);
 respawnButtom.addEventListener('click', respawn);
+
+
 
 let canvas, ctx, hudCanvas, hudCtx;
 
@@ -133,9 +138,25 @@ function drawScreen(state) {
 }
 
 function drawPlayer(players, color) {
-    Object.keys(players).forEach(player => {
-        playerState = players[player];
+    for (i in players) {
+        playerState = players[i];
 
+        if (playerState.playerId === playerId) {
+            camera = {
+                get x () { return -(canvas.width / 2 - playerState.pos.x) },
+                get y () { return -(canvas.height / 2 - playerState.pos.y) }
+            }
+            ctx.strokeRect(-camera.x,0,canvas.width,canvas.height);
+        }else
+        {
+            camera = {
+                get x () { return 0 },
+                get y () { return 0 }
+            }
+        }
+
+        
+        
         // Only for client local player
         // if (playerState.playerId === playerId) {
         //     ctx.fillStyle = "#ffffff";
@@ -151,11 +172,11 @@ function drawPlayer(players, color) {
         ctx.save();
 
         //Draw player img
-        ctx.translate(playerState.pos.x + size.x/2 , playerState.pos.y + size.y/2);
+        ctx.translate((playerState.pos.x - camera.x) + size.x/2 , playerState.pos.y + size.y/2);
         ctx.rotate(playerState.angle * Math.PI / 180);
-        ctx.translate(-(playerState.pos.x + playerState.size.x/2) , -(playerState.pos.y + playerState.size.y/2));
+        ctx.translate(-((playerState.pos.x - camera.x) + playerState.size.x/2) , -(playerState.pos.y  + playerState.size.y/2));
         ctx.globalAlpha = playerState.life.indicator;
-        ctx.drawImage(img_assets[playerState.shipStyle], playerState.pos.x, playerState.pos.y, size.x, size.y,);
+        ctx.drawImage(img_assets[playerState.shipStyle], (playerState.pos.x - camera.x), playerState.pos.y, size.x, size.y,);
 
         ctx.restore();
 
@@ -165,16 +186,31 @@ function drawPlayer(players, color) {
         ctx.font = "12px Arial";
         posYModifier = 20;
         posXModifier = 70;
-        posY = (playerState.pos.y - 20) < posYModifier ? posYModifier : (playerState.pos.y - 20);
-        nextPosX = (playerState.pos.x + playerState.size.x/2);
+        posY = (playerState.pos.y - 30) < posYModifier ? posYModifier : (playerState.pos.y - 30);
+        nextPosX = (playerState.pos.x  - camera.x + playerState.size.x/2);
         posX = nextPosX < posXModifier ? posXModifier : nextPosX > canvas.width - posXModifier ? canvas.width - posXModifier : nextPosX;
         ctx.fillText(`-( ${playerState.level.current} )- ${playerState.playerName}`, posX , posY);
         // ctx.fillText(`Player Xp: ${playerState.level.exp.current} | ${playerState.level.exp.max}\n Total Earned: ${playerState.level.exp.totalEarned}`, posX, posY + 100,);
-        ctx.fillText(`Player Hp: ${playerState.life.health} | ${playerState.life.maxHealth}\n Damage: ${playerState.bullet.damage} | ${playerState.bullet.specialProperties.maxDamage} `, posX, posY + 100,);
+        // ctx.fillText(`Player Hp: ${playerState.life.health} | ${playerState.life.maxHealth}\n Damage: ${playerState.bullet.damage} | ${playerState.bullet.specialProperties.maxDamage} `, posX, posY + 100,);
         
         // ctx.fillRect(playerState.pos.x+size/2, playerState.pos.y+size/2, 15, 2); //CENTER OF OBJECT
+
+        //Draw life bar
+        ctx.save();
         
-    });
+        ctx.beginPath();
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = '#ffffff';
+        ctx.moveTo(posX - 50, posY + 10);
+        line = Math.lerp(playerState.life.maxHealth,0,50,-50,playerState.life.health);
+        if (line < -50) line = -50;
+
+        ctx.lineTo(posX + line, posY + 10);
+        ctx.stroke();
+        ctx.restore();
+
+        
+    };
 }
 
 function drawXpBar(players){
@@ -202,37 +238,6 @@ function drawBullets(bullets, color) {
 
         ctx.restore();
     };
-}
-
-function drawLifeBar(players){
-    Object.keys(players).forEach(player => {
-        playerState = players[player];
-        let length = playerState.life.indicator*100;
-        let innerLength = length - LIFEBARCORNERRADIUS *2;
-        if (innerLenght < 0) innerLength = 0;
-
-
-        let atualCornerRadius = LIFEBARCORNERRADIUS;
-        if (length < LIFEBARCORNERRADIUS *2) 
-        {
-            actualCornerRadius = length/2;
-        }
-
-        ctx.save();
-        ctx.lineCap = 'round';
-        ctx.lineWidth = actualCornerRadius;
-        ctx.strokeStyle = '#ff0000';
-
-        const leftX = playerState.pos.x + actualCornerRadius/2;
-        const rightX = leftX + innerLength;
-
-        ctx.beginPath();
-        ctx.moveTo(leftX, playerState.pos.y + 20);
-        ctx.lineTo(rightX, playerState.pos.y);
-        ctx.stroke();
-        
-        ctx.restore();
-    });
 }
 
 
@@ -303,7 +308,7 @@ function handleGameOver(args) {
     args = JSON.parse(args);
 
     if (args.id == playerId) {
-        // TODO: GAME OVER
+        deathText.innerText = 'The end...';
         for (var i = 0; i < respawnObjs.length; i++) {
             respawnObjs[i].style.display = 'block';
         }

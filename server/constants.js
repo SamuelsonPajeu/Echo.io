@@ -31,7 +31,7 @@ const shipProperties = {
             maxSpeed: 6,
             spread: 0,
             distance: 0,
-            maxDistance: 100,
+            maxDistance: 50,
             opacity:1,
             size: {
                 x: 30,
@@ -152,7 +152,7 @@ const shipProperties = {
                 y: 5,
             },
             angle: 0,
-            fireRate: 3,
+            fireRate: 3.5,
             lastFire: 0,
             pos : {
                 x : 0,
