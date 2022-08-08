@@ -224,17 +224,31 @@ function drawXpBar(players){
 }
 
 
-function drawBullets(bullets, color) {
+function drawBullets(bullets, color, players) {
 
     for (i in bullets){
         bullet = bullets[i];
+
+        if (playerId === bullet.origin) {
+            b_camera = {
+                get x () { return -(canvas.width / 2 - players[playerId].pos.x) },
+                get y () { return -(canvas.height / 2 - players[playerId].pos.y) }
+            }
+        }else
+        {
+            b_camera = {
+                get x () { return 0 },
+                get y () { return 0 }
+            }
+        }
+
         ctx.fillStyle = color;
         ctx.save();
-        ctx.translate(bullet.pos.x + bullet.size.x/2 , bullet.pos.y + bullet.size.y/2);
+        ctx.translate((bullet.pos.x - b_camera.x) + bullet.size.x/2 , bullet.pos.y + bullet.size.y/2);
         ctx.rotate(bullet.angle * Math.PI / 180);
-        ctx.translate(-(bullet.pos.x + bullet.size.x/2) , -(bullet.pos.y + bullet.size.y/2));
+        ctx.translate(-((bullet.pos.x - b_camera.x) + bullet.size.x/2) , -(bullet.pos.y + bullet.size.y/2));
         ctx.globalAlpha = bullet.opacity;
-        ctx.fillRect(bullet.pos.x, bullet.pos.y, bullet.size.x, bullet.size.y);
+        ctx.fillRect((bullet.pos.x - b_camera.x), bullet.pos.y, bullet.size.x, bullet.size.y);
 
         ctx.restore();
     };
@@ -278,7 +292,7 @@ function handleGameState(gameState) {
     gameState = JSON.parse(gameState);
 
     requestAnimationFrame(() => drawScreen(gameState)); 
-    requestAnimationFrame(() => drawBullets(gameState.bullets, BULLET_COLOUR));
+    requestAnimationFrame(() => drawBullets(gameState.bullets, BULLET_COLOUR, gameState.players));
     requestAnimationFrame(() => drawPlayer(gameState.players, PLAYER_COLOUR));
     requestAnimationFrame(() => drawXpBar(gameState.players));
 
