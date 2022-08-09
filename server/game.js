@@ -1,13 +1,15 @@
 const { createStateMachine } = require('./player-statemachine');
 const { checkCollision} = require('./checkcollision');
-const { FPS, returnShip } = require('./constants');
+const { FPS, returnShip, returnCollectables } = require('./constants');
 
 const CANVASSIZE = {x: 2000, y: 2000};
 
 
 Math.fmod = function (a,b) { return Number((a - (Math.floor(a / b) * b)).toPrecision(8)); };
 Math.lerp = function (X1, X2, Y1, Y2, X3) { return Number((X2 - X3) * Y1 + (X3 - X1) * Y2) / (X2 - X1);};
-
+Math.randomRange = function (min, max) { return Math.floor(Math.random() * (max - min + 1)) + min;};
+Math.randomFloatRange = function (min, max) { return Math.random() * (max - min + 1) + min;};
+Math.distance = function (obj1, obj2) {return Math.sqrt(Math.pow(obj1.x - obj2.x, 2) + Math.pow(obj1.y - obj2.y, 2));};
 Math.percentage = function (percentage, totalValue){ return Number((percentage/100) * totalValue) };
 
 function initGame(args){
@@ -22,9 +24,18 @@ function createGameState(args) {
     newPlayer = spawnPlayer(args);
     return {
         bulletsCount: 0,
+        collectablesCount: 0,
         players: 
             { [args.id] : newPlayer },
             bullets : {},
+        
+        spawnCicle : {
+            cicleTime : 10,
+            nextCicleIn : 10,
+        },
+        collectablesMaxAmount : 60,
+        collectables : {},
+        enemies : {},
     };
     
 }
@@ -65,6 +76,12 @@ function gameLoop(state){
         return
     }
     // Update state machine
+    state.spawnCicle.nextCicleIn -= 5/FPS;
+
+    if (state.spawnCicle.nextCicleIn <= 0 ){
+        state.spawnCicle.nextCicleIn = state.spawnCicle.cicleTime;
+        updateSpawns(state);
+    }
     
     updatePlayerPosition(state);
     updatePlayerAngle(state);
@@ -72,6 +89,9 @@ function gameLoop(state){
     checkBulletsCollision(state);
     updatePlayerBullet(state);
     updatePlayerStatus(state);
+    updateCollectablesCollision(state);
+
+    
     //Update player position
 
 }
@@ -399,6 +419,32 @@ function updatePlayerStatus(state){
     
 }
 
+function updateSpawns(state){
+    if (Object.keys(state.collectables).length < state.collectablesMaxAmount){
+        spawnCollectables(state, state.collectablesMaxAmount - Object.keys(state.collectables).length);
+    }
+}
+
+function spawnCollectables(state, amount){
+    for (i = 0; i < amount; i++){
+        x = state.collectablesCount;
+        r_number = Math.randomRange(0,100);
+        if (r_number < 8){
+            state.collectables[x] = returnCollectables('heal');
+        }else {
+            state.collectables[x] = returnCollectables('xp');
+        }
+        
+        state.collectables[x].pos.x = Math.randomRange(0, CANVASSIZE.x - state.collectables[x].size.x);
+        state.collectables[x].pos.y = Math.randomRange(0, CANVASSIZE.y - state.collectables[x].size.y);
+        state.collectables[x].size.multiplier = Math.randomFloatRange(1, 4);
+        state.collectables[x].size.x *= state.collectables[x].size.multiplier;
+        state.collectables[x].size.y *= state.collectables[x].size.multiplier;
+        state.collectables[x].ammount *= state.collectables[x].size.multiplier;
+        state.collectablesCount++;
+    }
+}
+
 function checkBulletsCollision(state){
     if (!state){
         return
@@ -458,6 +504,27 @@ function checkBulletsCollision(state){
 
 }
 
+function updateCollectablesCollision(state){
+    if (!state)return;
+    for (k in state.collectables){
+        collectable = state.collectables[k];
+        for (j in state.players){
+            player = state.players[j];
+            if (checkCollision(collectable, player)){
+                if (collectable.type == 'heal'){
+                    healPlayer(player, collectable.ammount);
+                }else if (collectable.type == 'xp'){
+                    givePlayerExp(player, collectable.ammount);
+                }
+                delete state.collectables[k];
+            }
+        }
+
+    }
+
+
+}
+
 function checkBoundaries(objSize, nextPos){
     
     
@@ -468,7 +535,6 @@ function checkBoundaries(objSize, nextPos){
     }
 
 }
-
 
 function checkBulletBoundaries(objSize, nextPos){
     
@@ -556,9 +622,7 @@ function levelUpPlayer(player){
 }
 
 function givePlayerExp(player, ammount){
-    ammount += 10000000;
     
-        
         do {
             if (player.level.current < player.level.max){
                 expToNext = player.level.exp.max - player.level.exp.current;
@@ -576,7 +640,7 @@ function givePlayerExp(player, ammount){
             }else{break;}
         } while (ammount > 0);
         
-    }
+}
 
 
 function checkPlayerAlive(state){
@@ -588,7 +652,7 @@ function checkPlayerAlive(state){
     for (i in state.players){
         player = state.players[i];
         if (player.life.health <= 0){
-            xp = player.level.exp.totalEarned ? Math.percentage(40, player.level.exp.totalEarned) : 0;
+            xp = player.level.exp.totalEarned ? Math.percentage(40, player.level.exp.totalEarned) : 10;
             givePlayerExp(state.players[player.lastHitBy], xp);
             healPlayer(state.players[player.lastHitBy], Math.percentage(10, state.players[player.lastHitBy].life.maxHealth));
             deathPlayer = player;

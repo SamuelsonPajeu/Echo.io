@@ -121,10 +121,18 @@ function start() {
         ship2 : new Image(),
         ship3 : new Image(),
     }
+
+    collectables_assets = {
+        healorb : new Image(),
+        xporb : new Image(),
+    },
     // ASSETS LOAD
     img_assets.ship1.src = '../assets/img/ship1.png';
     img_assets.ship2.src = '../assets/img/ship2.png';
     img_assets.ship3.src = '../assets/img/ship3.png';
+
+    collectables_assets.healorb.src = '../assets/img/healorb.png';
+    collectables_assets.xporb.src = '../assets/img/xporb.png';
 
     // KEYBOARD LISTENER
     document.addEventListener('keydown', keyDown, false);
@@ -133,32 +141,53 @@ function start() {
 }
 
 // DRAW 
-function drawScreen(state) {
+function drawScreen(players) {
     // GAME CANVAS
     ctx.fillStyle = BG_COLOUR;
     // ctx.globalCompositeOperation = 'destination-under';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    camera = {
+        get x () { return players[playerId].pos.x <= canvas.width / 2 ? 0 : players[playerId].pos.x - players[playerId].size.x/2 >= virtualCanvas.width - (canvas.width/2) ?  (canvas.width / 3) + players[playerId].size.x/2  : -(canvas.width / 2 - players[playerId].pos.x) },
+        get y () { return  players[playerId].pos.y <= canvas.height / 2 ? 0 :  players[playerId].pos.y -  players[playerId].size.y >= virtualCanvas.height - (canvas.height/2) ? (canvas.height * 1.2) +  players[playerId].size.y : -(canvas.height / 2 -  players[playerId].pos.y) }
+    }
+
+    ctx.save();
+    for (var i=5; i < virtualCanvas.width; i+=50) {
+        
+
+        ctx.moveTo(i - camera.x , 5);
+        ctx.lineTo(i - camera.x, virtualCanvas.height - 5);
+
+        ctx.moveTo(5, i - camera.y);
+        ctx.lineTo(virtualCanvas.width - 5, i - camera.y);
+
+        ctx.strokeStyle = "#363c43";
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+    }
+    ctx.restore();
 
 }
 
 function drawPlayer(players, color) {
     for (i in players) {
         playerState = players[i];
-
+        
         if (playerState.playerId === playerId) {
             camera = {
-                get x () { return -(canvas.width / 2 - playerState.pos.x) },
-                get y () { return -(canvas.height / 2 - playerState.pos.y) }
+                get x () { return playerState.pos.x <= canvas.width / 2 ? 0 : playerState.pos.x - playerState.size.x/2 >= virtualCanvas.width - (canvas.width/2) ? (canvas.width / 3) + playerState.size.x/2  : -(canvas.width / 2 - playerState.pos.x) },
+                get y () { return playerState.pos.y <= canvas.height / 2 ? 0 : playerState.pos.y - playerState.size.y >= virtualCanvas.height - (canvas.height/2) ? (canvas.height * 1.21) + playerState.size.y : -(canvas.height / 2 - playerState.pos.y) }
             }
             ctx.strokeStyle = "#ffffff";
-            ctx.strokeRect(-camera.x,-camera.y,virtualCanvas.width,virtualCanvas.height);
+            ctx.strokeRect(-camera.x,-camera.y,virtualCanvas.width ,virtualCanvas.height );
             // ctx.fillStyle = GAME_COLOUR;
             // ctx.fillRect(-camera.x, -camera.y, virtualCanvas.width, virtualCanvas.height);
         }else
         {
             camera = {
-                get x () { return -(canvas.width / 2 - players[playerId].pos.x) },
-                get y () { return -(canvas.height / 2 - players[playerId].pos.y) }
+                get x () { return players[playerId].pos.x <= canvas.width / 2 ? 0 : players[playerId].pos.x - players[playerId].size.x/2 >= virtualCanvas.width - (canvas.width/2) ?  (canvas.width / 3) + players[playerId].size.x/2  : -(canvas.width / 2 - players[playerId].pos.x) },
+                get y () { return  players[playerId].pos.y <= canvas.height / 2 ? 0 :  players[playerId].pos.y -  players[playerId].size.y >= virtualCanvas.height - (canvas.height/2) ? (canvas.height * 1.2) +  players[playerId].size.y : -(canvas.height / 2 -  players[playerId].pos.y) }
             }
         }
 
@@ -244,18 +273,11 @@ function drawBullets(bullets, color, players) {
     for (i in bullets){
         bullet = bullets[i];
 
-        if (playerId === bullet.origin) {
-            b_camera = {
-                get x () { return -(canvas.width / 2 - players[playerId].pos.x) },
-                get y () { return -(canvas.height / 2 - players[playerId].pos.y) }
-            }
-        }else
-        {
-            b_camera = {
-                get x () { return -(canvas.width / 2 - players[playerId].pos.x) },
-                get y () { return -(canvas.height / 2 - players[playerId].pos.y) }
-            }
+        b_camera = {
+            get x () { return players[playerId].pos.x <= canvas.width / 2 ? 0 : players[playerId].pos.x - players[playerId].size.x/2 >= virtualCanvas.width - (canvas.width/2) ?  (canvas.width / 3) + players[playerId].size.x/2   : -(canvas.width / 2 - players[playerId].pos.x) },
+            get y () { return  players[playerId].pos.y <= canvas.height / 2 ? 0 :  players[playerId].pos.y -  players[playerId].size.y >= virtualCanvas.height - (canvas.height/2) ? (canvas.height * 1.2) +  players[playerId].size.y : -(canvas.height / 2 -  players[playerId].pos.y) }
         }
+
 
         ctx.fillStyle = color;
         ctx.save();
@@ -269,6 +291,21 @@ function drawBullets(bullets, color, players) {
     };
 }
 
+function drawCollectables(collectables, players) {
+    for (i in collectables){
+        collectable = collectables[i];
+        if (!collectable)return;
+
+        c_camera = {
+            get x () { return players[playerId].pos.x <= canvas.width / 2 ? 0 : players[playerId].pos.x - players[playerId].size.x/2 >= virtualCanvas.width - (canvas.width/2) ?  (canvas.width / 3) + players[playerId].size.x/2   : -(canvas.width / 2 - players[playerId].pos.x) },
+            get y () { return  players[playerId].pos.y <= canvas.height / 2 ? 0 :  players[playerId].pos.y -  players[playerId].size.y >= virtualCanvas.height - (canvas.height/2) ? (canvas.height * 1.2) +  players[playerId].size.y : -(canvas.height / 2 -  players[playerId].pos.y) }
+        }
+
+        ctx.save();
+        ctx.drawImage(collectables_assets[collectable.assetName], (collectable.pos.x - c_camera.x), (collectable.pos.y - c_camera.y), collectable.size.x, collectable.size.y,);
+        ctx.restore();
+    };
+}
 
 // TO SERVER
 
@@ -306,12 +343,13 @@ function handleRoomFull(){
 function handleGameState(gameState) {
     gameState = JSON.parse(gameState);
 
-    requestAnimationFrame(() => drawScreen(gameState)); 
+    requestAnimationFrame(() => drawScreen(gameState.players)); 
     
-    
+    requestAnimationFrame(() => drawCollectables(gameState.collectables, gameState.players));
     requestAnimationFrame(() => drawBullets(gameState.bullets, BULLET_COLOUR, gameState.players));
     requestAnimationFrame(() => drawPlayer(gameState.players, PLAYER_COLOUR));
     requestAnimationFrame(() => drawXpBar(gameState.players));
+    
 
 
     // requestAnimationFrame(() => drawLifeBar(gameState.players));

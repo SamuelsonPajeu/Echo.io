@@ -180,12 +180,94 @@ const shipProperties = {
     }, //ship3
 }
 
+const enemiesProperties = {
+    anarchy : {
+        enemyName : 'anarchy',
+        size : { 
+            x : 30,
+            y : 30,
+        },
+        pos : {
+            x : 0,
+            y : 0,
+        },
+        angle : 0,
+        speed : 0,
+        turnSpeed: 5,
+        bullet: {
+            type: 0,
+            damage: 5,
+            speed: 14,
+            maxSpeed: 14,
+            spread: 0.5,
+            distance: 0,
+            maxDistance: 30,
+            opacity:1,
+            size: {
+                x: 5,
+                y: 5,
+            },
+            angle: 0,
+            fireRate: 0.5,
+            lastFire: 0,
+            pos : {
+                x : 0,
+                y : 0,
+            },
+            specialProperties : {
+
+            },
+        },
+    },
+}
+
+const collectablesProperties = {
+    xp : {
+        assetName: 'xporb',
+        type : 'xp',
+        size : {
+            x: 3,
+            y: 5,
+            multiplier : 1,
+        },
+        pos : {
+            x: 0,
+            y: 0,
+        },
+        angle: 0,
+        ammount : 3,
+    },
+
+    heal : {
+        assetName: 'healorb',
+        type : 'heal',
+        size : {
+            x: 5,
+            y: 5,
+            multiplier : 1,
+        },
+        pos : {
+            x: 0,
+            y: 0,
+        },
+        angle: 0,
+        ammount : 10,
+    }
+}
+
+
+
 function returnShip(shipStyle){
     return (JSON.parse(JSON.stringify(shipProperties[shipStyle])));
+}
+
+function returnCollectables(type){
+    return (JSON.parse(JSON.stringify(collectablesProperties[type])));
 }
 
 
 module.exports = {
     FPS,
     returnShip,
+    returnCollectables,
 }
