@@ -33,7 +33,7 @@ function createGameState(args) {
             cicleTime : 10,
             nextCicleIn : 10,
         },
-        collectablesMaxAmount : 60,
+        collectablesMaxAmount : 30,
         collectables : {},
         enemies : {},
     };
@@ -429,7 +429,7 @@ function spawnCollectables(state, amount){
     for (i = 0; i < amount; i++){
         x = state.collectablesCount;
         r_number = Math.randomRange(0,100);
-        if (r_number < 8){
+        if (r_number < 4){
             state.collectables[x] = returnCollectables('heal');
         }else {
             state.collectables[x] = returnCollectables('xp');
