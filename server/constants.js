@@ -33,7 +33,7 @@ const shipProperties = {
             maxSpeed: 6 * multiplier,
             spread: 0,
             distance: 0,
-            maxDistance: 50,
+            maxDistance: 50 / multiplier,
             opacity:1,
             size: {
                 x: 30,
@@ -91,7 +91,7 @@ const shipProperties = {
             maxSpeed: 8 * multiplier,
             spread: 10,
             distance: 0,
-            maxDistance: 48 * multiplier,
+            maxDistance: 60 / multiplier,
             opacity:1,
             size: {
                 x: 9,
@@ -110,7 +110,7 @@ const shipProperties = {
             },
         },
         angle: 0,
-        turnSpeed: 8 * multiplier,
+        turnSpeed: 7 * multiplier,
         speed: 6 * multiplier,
         size: {
             x: 35,
@@ -149,7 +149,7 @@ const shipProperties = {
             maxSpeed: 18 * multiplier,
             spread: 0.8,
             distance: 0,
-            maxDistance: 70,
+            maxDistance: 70 / multiplier,
             opacity:1,
             size: {
                 x: 10,
@@ -175,7 +175,7 @@ const shipProperties = {
             },
         },
         angle: 0,
-        turnSpeed: 6* multiplier,
+        turnSpeed: 5* multiplier,
         speed: 9* multiplier,
         size: {
             x: 32,
