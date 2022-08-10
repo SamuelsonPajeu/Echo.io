@@ -40,7 +40,8 @@ const shipProperties = {
                 y: 30,
             },
             angle: 0,
-            fireRate: 4* -multiplier,
+            fireRate: 4 / multiplier,
+            fireRateMin: 3 / multiplier,
             lastFire: 0,
             pos : {
                 x : 0,
@@ -97,7 +98,8 @@ const shipProperties = {
                 y: 9,
             },
             angle: 0,
-            fireRate: 0.5 * -multiplier,
+            fireRate: 0.5 / multiplier,
+            fireRateMin: 0.015 / multiplier,
             lastFire: 0,
             pos : {
                 x : 0,
@@ -154,7 +156,8 @@ const shipProperties = {
                 y: 5,
             },
             angle: 0,
-            fireRate: 3.5 * -multiplier,
+            fireRate: 3.5 / multiplier,
+            fireRateMin: 2 / multiplier,
             lastFire: 0,
             pos : {
                 x : 0,

@@ -571,7 +571,7 @@ function levelUpPlayer(player){
             player.level.current += 1;
             player.life.maxHealth += 60;
             player.bullet.fireRate -= 0.01;
-            if (player.bullet.fireRate < 3) player.bullet.fireRate = 3;
+            if (player.bullet.fireRate < player.bullet.fireRateMin) player.bullet.fireRate = player.bullet.fireRateMin;
             player.bullet.maxDistance += 3;
             player.bullet.maxSpeed += 0.15;
             player.bullet.damage += 15;
@@ -585,7 +585,7 @@ function levelUpPlayer(player){
             player.life.maxHealth += 10;
             player.speed += 0.2;
             player.bullet.fireRate -= 0.015;
-            if (player.bullet.fireRate < 0.05) player.bullet.fireRate = 0.05;
+            if (player.bullet.fireRate < player.bullet.fireRateMin) player.bullet.fireRate = player.bullet.fireRateMin;
             player.bullet.maxDistance -= 0.5;
             player.bullet.maxSpeed += 1;
             player.bullet.damage += 0.25;
@@ -599,7 +599,7 @@ function levelUpPlayer(player){
             player.level.current += 1;
             player.life.maxHealth += 2;
             player.speed += 0.30;
-            if (player.bullet.fireRate < 2) player.bullet.fireRate = 2;
+            if (player.bullet.fireRate < player.bullet.fireRateMin) player.bullet.fireRate = player.bullet.fireRateMin;
             player.bullet.maxDistance += 10;
             player.bullet.maxSpeed += 0.30;
             player.bullet.damage += 5;
