@@ -33,7 +33,7 @@ function createGameState(args) {
             cicleTime : 10,
             nextCicleIn : 10,
         },
-        collectablesMaxAmount : 30,
+        collectablesMaxAmount : 60,
         collectables : {},
         enemies : {},
     };
