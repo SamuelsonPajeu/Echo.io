@@ -227,4 +227,6 @@ function emitGameState(room, gameState){
 }
 
 
-io.listen(3000);
+// io.listen(3000); //FOR LOCALHOST
+
+io.listen(process.env.PORT || 3000); //FOR HEROKU
