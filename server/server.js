@@ -79,6 +79,11 @@ io.on('connection', client => {
     function handleRespawn(args) {
         console.log(' > [handleRespawn] Respawnando jogador');
         room = clientRooms[args.roomId];
+        if(!room){
+            console.log(' > [handleRespawn]<Server> Sala expirou...');
+            client.emit('roomDoesNotExist');
+            return;
+        }
         state[room.roomName].players[client.id] = (spawnPlayer({'shipStyle' : args.selected, 'id' : client.id, 'playerName': args.playerName}));
     }
 

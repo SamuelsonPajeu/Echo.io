@@ -231,8 +231,8 @@ const collectablesProperties = {
         assetName: 'xporb',
         type : 'xp',
         size : {
-            x: 5,
-            y: 7,
+            x: 7,
+            y: 9,
             multiplier : 1,
         },
         pos : {
@@ -240,7 +240,7 @@ const collectablesProperties = {
             y: 0,
         },
         angle: 0,
-        ammount : 7,
+        ammount : 13,
     },
 
     heal : {

@@ -28,7 +28,6 @@ function createGameState(args) {
         players: 
             { [args.id] : newPlayer },
             bullets : {},
-        
         spawnCicle : {
             cicleTime : 10,
             nextCicleIn : 10,
@@ -36,6 +35,7 @@ function createGameState(args) {
         collectablesMaxAmount : 60,
         collectables : {},
         enemies : {},
+        
     };
     
 }
@@ -48,7 +48,7 @@ function spawnPlayer(args){
     player.playerId = args.id;
     player.playerName = args.playerName;
     // Level
-    player.level.max = 15;
+    player.level.max = 30;
 
     // Random Position
     player.pos = {
@@ -437,7 +437,7 @@ function spawnCollectables(state, amount){
         
         state.collectables[x].pos.x = Math.randomRange(0, CANVASSIZE.x - state.collectables[x].size.x);
         state.collectables[x].pos.y = Math.randomRange(0, CANVASSIZE.y - state.collectables[x].size.y);
-        state.collectables[x].size.multiplier = Math.randomFloatRange(1, 4);
+        state.collectables[x].size.multiplier = Math.randomFloatRange(1, 3);
         state.collectables[x].size.x *= state.collectables[x].size.multiplier;
         state.collectables[x].size.y *= state.collectables[x].size.multiplier;
         state.collectables[x].ammount *= state.collectables[x].size.multiplier;
@@ -484,7 +484,9 @@ function checkBulletsCollision(state){
             if (player.playerId !== bullet.origin){
                 const bulletSpecialPropertiesOnHitPlayer = {
                     2 : function LifeSteal(){
-                        healPlayer(state.players[bullet.origin], state.players[bullet.origin].bullet.specialProperties.lifeSteal);
+                        if (state.players[bullet.origin]){
+                            healPlayer(state.players[bullet.origin], state.players[bullet.origin].bullet.specialProperties.lifeSteal);
+                        }
                     }
                 }
                 
@@ -548,37 +550,49 @@ function checkBulletBoundaries(objSize, nextPos){
 }
 
 function damagePlayer(player, damage){
-    if (player.status.invulnerability.active) return;
-    player.life.health -= damage;
-    player.life.indicator = Math.lerp(0, player.life.maxHealth, 0.3, 1, player.life.health);
-    if (player.life.health <= 0){
-        player.life.health = 0;
+    try{
+        if (player.status.invulnerability.active) return;
+        player.life.health -= damage;
+        player.life.indicator = Math.lerp(0, player.life.maxHealth, 0.3, 1, player.life.health);
+        if (player.life.health <= 0){
+            player.life.health = 0;
+        }
+    } catch (e){
+        console.log("> [damagePlayer] Exception: " + e);
+        return;
     }
+    
 
 }
 
 function healPlayer(player, heal){
-    player.life.health += heal;
-    player.life.indicator = Math.lerp(0, player.life.maxHealth, 0.3, 1, player.life.health);
-    if (player.life.health > player.life.maxHealth){
-        player.life.health = player.life.maxHealth;
+    try{
+        player.life.health += heal;
+        player.life.indicator = Math.lerp(0, player.life.maxHealth, 0.3, 1, player.life.health);
+        if (player.life.health > player.life.maxHealth){
+            player.life.health = player.life.maxHealth;
+        }
+    } catch (e){
+        console.log("> [healPlayer] Exception: " + e);
+        return;
     }
+
 }
 
 function levelUpPlayer(player){
     const levelUpProperties = {
         'ship1' : function(){
             player.level.current += 1;
-            player.life.maxHealth += 60;
+            player.life.maxHealth += 35;
             player.bullet.fireRate -= 0.01;
             if (player.bullet.fireRate < player.bullet.fireRateMin) player.bullet.fireRate = player.bullet.fireRateMin;
             player.bullet.maxDistance += 3;
-            player.bullet.maxSpeed += 0.15;
+            player.bullet.maxSpeed += 0.10;
             player.bullet.damage += 15;
-            player.bullet.size.x += 8;
-            player.bullet.size.y += 8;
-            player.size.x += 8;
-            player.size.y += 8;
+            player.bullet.size.x += 6.5;
+            player.bullet.size.y += 6.5;
+            player.size.x += 6.5;
+            player.size.y += 6.5;
         },
         'ship2' : function(){
             player.level.current += 1;
@@ -590,10 +604,10 @@ function levelUpPlayer(player){
             player.bullet.maxSpeed += 1;
             player.bullet.damage += 0.25;
             player.bullet.specialProperties.lifeSteal += 0.025;
-            player.bullet.size.x += 0.5;
-            player.bullet.size.y += 0.5;
-            player.size.x += 2.5;
-            player.size.y += 2.5;
+            player.bullet.size.x += 0.7;
+            player.bullet.size.y += 0.7;
+            player.size.x += 4;
+            player.size.y += 4;
         },
         'ship3' : function(){
             player.level.current += 1;
@@ -608,8 +622,8 @@ function levelUpPlayer(player){
             player.bullet.specialProperties.maxSize.x += 1;
             player.bullet.size.x += 0.5;
             // player.bullet.size.y += 0.5;
-            player.size.x += 1.5;
-            player.size.y += 1.5;
+            player.size.x += 2.3;
+            player.size.y += 2.3;
         },
     }
 
