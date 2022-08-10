@@ -1,4 +1,4 @@
-const FPS = 60;
+const FPS = 30;
 
 const shipProperties = {
     ship1 : {
@@ -226,8 +226,8 @@ const collectablesProperties = {
         assetName: 'xporb',
         type : 'xp',
         size : {
-            x: 3,
-            y: 5,
+            x: 5,
+            y: 8,
             multiplier : 1,
         },
         pos : {
@@ -235,7 +235,7 @@ const collectablesProperties = {
             y: 0,
         },
         angle: 0,
-        ammount : 6,
+        ammount : 10,
     },
 
     heal : {
