@@ -240,7 +240,7 @@ const collectablesProperties = {
             y: 0,
         },
         angle: 0,
-        ammount : 11,
+        ammount : 7,
     },
 
     heal : {
