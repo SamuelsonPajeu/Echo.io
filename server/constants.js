@@ -1,5 +1,7 @@
 const FPS = 30;
+Math.lerp = function (X1, X2, Y1, Y2, X3) { return Number((X2 - X3) * Y1 + (X3 - X1) * Y2) / (X2 - X1);};
 
+const multiplier = Math.lerp(0,60,3,1,FPS);
 const shipProperties = {
     ship1 : {
         playerName: '',
@@ -27,8 +29,8 @@ const shipProperties = {
         bullet: {
             type: 1,
             damage: 60,
-            speed: 6,
-            maxSpeed: 6,
+            speed: 6 *= multiplier,
+            maxSpeed: 6 *= multiplier,
             spread: 0,
             distance: 0,
             maxDistance: 50,
@@ -38,7 +40,7 @@ const shipProperties = {
                 y: 30,
             },
             angle: 0,
-            fireRate: 4,
+            fireRate: 4*= -multiplier,
             lastFire: 0,
             pos : {
                 x : 0,
@@ -49,8 +51,8 @@ const shipProperties = {
             },
         },
         angle: 0,
-        turnSpeed: 2,
-        speed: 3,
+        turnSpeed: 2 *= multiplier,
+        speed: 3 *= multiplier,
         size: {
             x: 30,
             y: 30,
@@ -84,18 +86,18 @@ const shipProperties = {
         bullet: {
             type: 2,
             damage: 15,
-            speed: 8,
-            maxSpeed: 8,
+            speed: 8 *= multiplier,
+            maxSpeed: 8 *= multiplier,
             spread: 10,
             distance: 0,
-            maxDistance: 48,
+            maxDistance: 48 *= multiplier,
             opacity:1,
             size: {
                 x: 9,
                 y: 9,
             },
             angle: 0,
-            fireRate: 0.5,
+            fireRate: 0.5 *= -multiplier,
             lastFire: 0,
             pos : {
                 x : 0,
@@ -106,8 +108,8 @@ const shipProperties = {
             },
         },
         angle: 0,
-        turnSpeed: 12,
-        speed: 5,
+        turnSpeed: 8 *= multiplier,
+        speed: 6 *= multiplier,
         size: {
             x: 35,
             y: 30,
@@ -141,8 +143,8 @@ const shipProperties = {
         bullet: {
             type: 3,
             damage: 10,
-            speed: 18,
-            maxSpeed: 18,
+            speed: 18 *= multiplier,
+            maxSpeed: 18 *= multiplier,
             spread: 0.8,
             distance: 0,
             maxDistance: 70,
@@ -152,7 +154,7 @@ const shipProperties = {
                 y: 5,
             },
             angle: 0,
-            fireRate: 3.5,
+            fireRate: 3.5 *= -multiplier,
             lastFire: 0,
             pos : {
                 x : 0,
@@ -170,8 +172,8 @@ const shipProperties = {
             },
         },
         angle: 0,
-        turnSpeed: 6,
-        speed: 9,
+        turnSpeed: 6*= multiplier,
+        speed: 9*= multiplier,
         size: {
             x: 32,
             y: 28,
@@ -227,7 +229,7 @@ const collectablesProperties = {
         type : 'xp',
         size : {
             x: 5,
-            y: 8,
+            y: 7,
             multiplier : 1,
         },
         pos : {
@@ -235,7 +237,7 @@ const collectablesProperties = {
             y: 0,
         },
         angle: 0,
-        ammount : 10,
+        ammount : 11,
     },
 
     heal : {

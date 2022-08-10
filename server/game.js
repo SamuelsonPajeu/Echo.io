@@ -653,6 +653,7 @@ function checkPlayerAlive(state){
         player = state.players[i];
         if (player.life.health <= 0){
             xp = player.level.exp.totalEarned ? Math.percentage(40, player.level.exp.totalEarned) : 10;
+            xp += 50;
             givePlayerExp(state.players[player.lastHitBy], xp);
             healPlayer(state.players[player.lastHitBy], Math.percentage(10, state.players[player.lastHitBy].life.maxHealth));
             deathPlayer = player;
