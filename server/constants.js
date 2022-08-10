@@ -1,4 +1,4 @@
-const FPS = 15;
+const FPS = 27;
 Math.lerp = function (X1, X2, Y1, Y2, X3) { return Number((X2 - X3) * Y1 + (X3 - X1) * Y2) / (X2 - X1);};
 
 const multiplier = Math.lerp(0,60,3,1,FPS);
