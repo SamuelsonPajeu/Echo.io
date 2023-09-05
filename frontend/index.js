@@ -1,5 +1,5 @@
 // const socket = io('http://localhost:3000', { transports : ['websocket'] }); //FOR LOCALHOST
-const socket = io('https://echo-io.herokuapp.com', { transports : ['websocket'] }); //FOR HEROKU
+const socket = io('https://echo-io.onrender.com', { transports : ['websocket'] }); //FOR HEROKU
 
 Math.lerp = function (X1, X2, Y1, Y2, X3) { return Number((X2 - X3) * Y1 + (X3 - X1) * Y2) / (X2 - X1);};
 
